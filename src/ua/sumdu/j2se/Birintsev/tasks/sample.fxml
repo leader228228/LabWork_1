@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXCheckBox?>
+<?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXTimePicker?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+<Accordion maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="550.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ua.sumdu.j2se.Birintsev.tasks.View">
+  <panes>
+    <TitledPane fx:id="allTasksTitledPane" animated="false" text="All tasks">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <TableView fx:id="tableAll" layoutX="46.0" layoutY="53.0" prefHeight="200.0" prefWidth="464.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0">
+                    <columns>
+                      <TableColumn fx:id="taskDetailClmn_all" prefWidth="75.0" text="Task" />
+                      <TableColumn fx:id="timeClmn_all" prefWidth="75.0" text="Time" />
+                        <TableColumn fx:id="fromClmn_all" prefWidth="75.0" text="From" />
+                        <TableColumn fx:id="toClmn_all" prefWidth="85.5999755859375" text="To" />
+                        <TableColumn fx:id="intervalClmn_all" prefWidth="76.79998779296875" text="Interval" />
+                        <TableColumn fx:id="isActiveClmn_all" maxWidth="100.0" minWidth="50.0" prefWidth="64.0" text="Active" />
+                    </columns>
+                  </TableView>
+               </children></AnchorPane>
+      </content>
+    </TitledPane>
+    <TitledPane fx:id="weekTasksTitledPane" animated="false" text="Week tasks">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <TableView fx:id="tableWeek" layoutX="42.0" layoutY="61.0" prefHeight="200.0" prefWidth="464.0">
+                     <columns>
+                        <TableColumn fx:id="taskDetailClmn_week" prefWidth="75.0" text="Task" />
+                        <TableColumn fx:id="timeClmn_week" prefWidth="75.0" text="Time" />
+                        <TableColumn fx:id="fromClmn_week" prefWidth="75.0" text="From" />
+                        <TableColumn fx:id="toClmn_week" prefWidth="85.5999755859375" text="To" />
+                        <TableColumn fx:id="intervalClmn_week" prefWidth="76.79998779296875" text="Interval" />
+                        <TableColumn fx:id="isActiveClmn_week" maxWidth="100.0" minWidth="50.0" prefWidth="64.0" text="Active" />
+                     </columns>
+                  </TableView>
+               </children></AnchorPane>
+      </content>
+    </TitledPane>
+    <TitledPane fx:id="newTaskTitledPane" animated="false" text="New task">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <TextField fx:id="taskDetails" layoutX="95.0" layoutY="26.0" prefHeight="26.0" prefWidth="191.0" />
+                  <Text layoutX="55.0" layoutY="44.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Task:" />
+                  <Button fx:id="addTaskBtn" layoutX="154.0" layoutY="259.0" mnemonicParsing="false" onAction="#createNewTask" text="Add task" />
+                  <JFXDatePicker fx:id="startDate" layoutX="100.0" layoutY="75.0" />
+                  <Text fx:id="testLabel3" layoutX="363.0" layoutY="51.0" strokeType="OUTSIDE" strokeWidth="0.0" text="I will be your task" />
+                  <JFXTimePicker fx:id="startTime" layoutX="100.0" layoutY="110.0" />
+                  <Text fx:id="fromLabel" layoutX="50.0" layoutY="96.0" strokeType="OUTSIDE" strokeWidth="0.0" text="From" wrappingWidth="28.99847412109375" />
+                  <JFXDatePicker fx:id="endDate" layoutX="340.0" layoutY="75.0" />
+                  <JFXTimePicker fx:id="endTime" layoutX="340.0" layoutY="110.0" />
+                  <Text fx:id="toLabel" layoutX="299.0" layoutY="104.0" strokeType="OUTSIDE" strokeWidth="0.0" text="To" wrappingWidth="28.99847412109375" />
+                  <JFXCheckBox fx:id="isActive" checkedColor="#00d204" layoutX="95.0" layoutY="205.0" selected="true" text="Activate" unCheckedColor="#fa0000" />
+                  <JFXCheckBox fx:id="isRepetative" layoutX="95.0" layoutY="169.0" onAction="#changeCreationMode" selected="true" text="Repetative task" />
+                  <Text fx:id="everyLabel" layoutX="370.0" layoutY="174.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Every" wrappingWidth="28.99847412109375" />
+                  <TextField fx:id="daysTxt" layoutX="406.0" layoutY="157.0" onContextMenuRequested="#blockContextMenu" onKeyTyped="#controllDayTyped" prefWidth="40.0" text="0" />
+                  <TextField fx:id="minutesTxt" layoutX="406.0" layoutY="211.0" onContextMenuRequested="#blockContextMenu" onKeyTyped="#controllMinuteTyped" prefWidth="40.0" text="5" />
+                  <TextField fx:id="hoursTxt" layoutX="406.0" layoutY="184.0" onContextMenuRequested="#blockContextMenu" onKeyTyped="#controllHourTyped" prefWidth="40.0" text="0" />
+                  <Text fx:id="daysLabel" layoutX="451.0" layoutY="175.0" strokeType="OUTSIDE" strokeWidth="0.0" text="days" wrappingWidth="28.99847412109375" />
+                  <Label fx:id="hoursLabel" layoutX="451.0" layoutY="188.0" text="hours" />
+                  <Label fx:id="minutesLabel" layoutX="451.0" layoutY="215.0" text="minutes" />
+               </children></AnchorPane>
+      </content>
+    </TitledPane>
+  </panes>
+</Accordion>
