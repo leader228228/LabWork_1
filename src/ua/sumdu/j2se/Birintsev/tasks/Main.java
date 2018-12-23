@@ -1,6 +1,11 @@
 package ua.sumdu.j2se.Birintsev.tasks;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import javafx.application.Application;
@@ -9,9 +14,17 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import static ua.sumdu.j2se.Birintsev.tasks.Utill.dateFormate;
+
 public class Main {
 
     public static void main(String[] args) throws Exception {
+        /*Date date = new Date();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormate);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormate);
+        LocalDateTime localDateTime = LocalDateTime.parse(dateFormat.format(date),formatter);*/
+
+
         /*Task task1 = new Task("123" ,new Date());
         Task task2 = new Task("old task",new Date(1));
         Task task3 = new Task("some info", new Date(33333333));
@@ -24,7 +37,7 @@ public class Main {
         /*Writer writer = new FileWriter("res/tasklists/file.txt");
         writer.write(list.toString());
         writer.close();*/
-        System.out.println("");
+        //System.out.println("");
 
     }
 

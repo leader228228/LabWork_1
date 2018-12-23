@@ -3,46 +3,52 @@ package ua.sumdu.j2se.Birintsev.tasks;
 
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDatePicker;
-import com.jfoenix.controls.JFXRadioButton;
 import com.jfoenix.controls.JFXTimePicker;
 import javafx.application.Application;
-import javafx.beans.Observable;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableListValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableArray;
 import javafx.collections.ObservableList;
-import javafx.event.Event;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
 
 
 public class View extends Application {
+
+    public View() {
+    }
 
     private static final String tasklistsDir = "res/tasklists/";
 
@@ -50,9 +56,11 @@ public class View extends Application {
 
     private File tasksFile;
 
-    private ObservableList<Task> observableWeekList;
+    private ObservableList<Task> sublist;
 
     private ObservableList<Task> observableList;
+
+    private Stage primStage;
 
     @FXML
     private TitledPane allTasksTitledPane;
@@ -142,23 +150,37 @@ public class View extends Application {
     private TableView<Task> tableWeek;
 
     @FXML
-    private TableColumn<Task, String> taskDetailClmn_week;
+    private Button refreshSublistBtn;
 
     @FXML
-    private TableColumn<Task, String> timeClmn_week;
+    private TableColumn<Task, String> taskDetailClmn_sublist;
 
     @FXML
-    private TableColumn<Task, String> fromClmn_week;
+    private TableColumn<Task, String> timeClmn_sublist;
 
     @FXML
-    private TableColumn<Task, String> toClmn_week;
+    private TableColumn<Task, String> fromClmn_sublist;
 
     @FXML
-    private TableColumn<Task, String> intervalClmn_week;
+    private TableColumn<Task, String> toClmn_sublist;
 
     @FXML
-    private TableColumn<Task, String> isActiveClmn_week;
+    private TableColumn<Task, String> intervalClmn_sublist;
 
+    @FXML
+    private TableColumn<Task, String> isActiveClmn_sublist;
+
+    @FXML
+    private JFXDatePicker sublistFromDate;
+
+    @FXML
+    private JFXDatePicker sublistToDate;
+
+    @FXML
+    private JFXTimePicker sublistFromTime;
+
+    @FXML
+    private JFXTimePicker sublistToTime;
 
     /**
      * Turns the newTaskTitledPane
@@ -168,28 +190,10 @@ public class View extends Application {
     private void changeCreationMode(){
         if(isRepetative.isSelected()){
             fromLabel.setText("From");
-            toLabel.setVisible(true);
-            endDate.setVisible(true);
-            endTime.setVisible(true);
-            everyLabel.setVisible(true);
-            daysLabel.setVisible(true);
-            daysTxt.setVisible(true);
-            hoursLabel.setVisible(true);
-            hoursTxt.setVisible(true);
-            minutesLabel.setVisible(true);
-            minutesTxt.setVisible(true);
+            showNodes(toLabel,endDate,endTime,everyLabel,daysLabel,daysTxt,hoursLabel,hoursTxt,minutesLabel,minutesTxt);
         } else {
             fromLabel.setText("Time");
-            toLabel.setVisible(false);
-            endDate.setVisible(false);
-            endTime.setVisible(false);
-            everyLabel.setVisible(false);
-            daysLabel.setVisible(false);
-            daysTxt.setVisible(false);
-            hoursLabel.setVisible(false);
-            hoursTxt.setVisible(false);
-            minutesLabel.setVisible(false);
-            minutesTxt.setVisible(false);
+            hideNodes(toLabel,endDate,endTime,everyLabel,daysLabel,daysTxt,hoursLabel,hoursTxt,minutesLabel,minutesTxt);
         }
     }
 
@@ -205,81 +209,15 @@ public class View extends Application {
         if(isRepetative.isSelected()){
             Date end =  java.sql.Date.valueOf(endDate.getValue());
             end.setTime(end.getTime() + endTime.getValue().getHour() * 3600000 + endTime.getValue().getMinute() * 60000);
-            int interval = Integer.parseInt(daysTxt.getText()) * 86400 + Integer.parseInt(hoursTxt.getText()) * 3600 + Integer.parseInt(minutesTxt.getText()) * 60;
-            task = new Task(details, start, end, interval);
+            //int interval = Integer.parseInt(daysTxt.getText()) * 86400 + Integer.parseInt(hoursTxt.getText()) * 3600 + Integer.parseInt(minutesTxt.getText()) * 60;
+            task = new Task(details, start, end,
+                    Utill.getIntervalFromStrings(daysTxt.getText(), hoursTxt.getText(), minutesTxt.getText()));
         }else{
             task = new Task(details, start);
         }
         task.setActive(isActive.isSelected());
-        System.out.println(task);
         observableList.add(task);
-        updateWeekList();
-    }
-
-    @FXML
-    public void controllDayTyped(){
-        Pattern pattern = Pattern.compile("^\\d*$");
-        Matcher matcher = pattern.matcher(daysTxt.getText());
-        if(!matcher.matches()){
-            daysTxt.setText(daysTxt.getText().replaceAll("[^\\d]",""));
-            //daysTxt.setText(daysTxt.getText().replaceFirst("^0.+$", "0")); не работает
-        }
-        pattern = Pattern.compile("^0(.+)$");
-        matcher = pattern.matcher(daysTxt.getText());
-        if(matcher.matches()){
-            daysTxt.setText(matcher.group(1));
-        }
-        try{
-            if(Integer.parseInt(daysTxt.getText()) > 24855){
-                daysTxt.setText("24855");
-            }
-        }catch (java.lang.NumberFormatException e){
-            daysTxt.setText("0");
-        }
-    }
-
-    @FXML
-    public void controllHourTyped(){
-        Pattern pattern = Pattern.compile("^\\d*$");
-        Matcher matcher = pattern.matcher(hoursTxt.getText());
-        if(!matcher.matches()){
-            hoursTxt.setText(hoursTxt.getText().replaceAll("[^\\d]",""));
-            //hoursTxt.setText(hoursTxt.getText().replaceFirst("^0.+$", "0")); не работает
-        }
-        pattern = Pattern.compile("^0(.+)$");
-        matcher = pattern.matcher(hoursTxt.getText());
-        if(matcher.matches()){
-            hoursTxt.setText(matcher.group(1));
-        }
-        try{
-            if(Integer.parseInt(hoursTxt.getText()) > 23){
-                hoursTxt.setText("23");
-            }
-        }catch (java.lang.NumberFormatException e){
-            hoursTxt.setText("0");
-        }
-    }
-
-    @FXML
-    public void controllMinuteTyped(){
-        Pattern pattern = Pattern.compile("^\\d*$");
-        Matcher matcher = pattern.matcher(minutesTxt.getText());
-        if(!matcher.matches()){
-            minutesTxt.setText(minutesTxt.getText().replaceAll("[^\\d]",""));
-            //minutesTxt.setText(minutesTxt.getText().replaceFirst("^0.+$", "0")); не работает
-        }
-        pattern = Pattern.compile("^0(.+)$");
-        matcher = pattern.matcher(minutesTxt.getText());
-        if(matcher.matches()){
-            minutesTxt.setText(matcher.group(1));
-        }
-        try {
-            if (Integer.parseInt(minutesTxt.getText()) > 59) {
-                minutesTxt.setText("59");
-            }
-        }catch (java.lang.NumberFormatException e){
-            minutesTxt.setText("0");
-        }
+        refreshSublistBtn.getOnAction().handle(new ActionEvent());
     }
 
     /**
@@ -287,6 +225,20 @@ public class View extends Application {
      */
     @FXML
     public void blockContextMenu(){
+
+    }
+
+    @FXML
+    void refreshSublist(ActionEvent event) {
+        System.out.println(sublist);
+        sublist.clear();
+        System.out.println(sublist);
+
+        sublist.addAll((Collection<Task>) Tasks.incoming(
+                observableList,
+                Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue())),
+                Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue()))));
+        System.out.println(sublist);
 
     }
 
@@ -298,14 +250,14 @@ public class View extends Application {
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Task manager");
+        primaryStage.setScene(new Scene(root, primaryStage.getWidth(), primaryStage.getHeight()));
+        primStage = primaryStage;
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                //saveTasks();
-                primaryStage.close();
+                saveTasks();
             }
         });
-        primaryStage.setScene(new Scene(root, primaryStage.getWidth(), primaryStage.getHeight()));
         primaryStage.show();
     }
 
@@ -315,15 +267,220 @@ public class View extends Application {
         if(!tasksFile.canRead()){
             tasksFile.createNewFile();
         }
+        startDate.setValue(LocalDate.now());
+        startTime.setValue(LocalTime.now());
+        endDate.setValue(LocalDate.now().plusDays(7));
+        endTime.setValue(LocalTime.now());
+
+        startDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
+                if(newValue == null){
+                    startDate.setValue(oldValue);
+                }
+                LocalDateTime newLDT = LocalDateTime.of(newValue, startTime.getValue());
+                LocalDateTime toLDT = LocalDateTime.of(endDate.getValue(), endTime.getValue());
+                if(!newLDT.isBefore(toLDT)){
+                    startDate.setValue(oldValue);
+                }
+            }
+        });
+        startTime.valueProperty().addListener(new ChangeListener<LocalTime>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalTime> observable, LocalTime oldValue, LocalTime newValue) {
+                if(newValue == null){
+                    startTime.setValue(oldValue);
+                }
+                LocalDateTime newLDT = LocalDateTime.of(startDate.getValue(),newValue);
+                LocalDateTime toLDT = LocalDateTime.of(endDate.getValue(),endTime.getValue());
+                if(!newLDT.isBefore(toLDT)){
+                    startTime.setValue(oldValue);
+                }
+            }
+        });
+        endDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
+                if(newValue == null){
+                    endDate.setValue(oldValue);
+                }
+                LocalDateTime newLDT = LocalDateTime.of(newValue, endTime.getValue());
+                LocalDateTime fromLDT = LocalDateTime.of(startDate.getValue(), startTime.getValue());
+                if(!newLDT.isAfter(fromLDT)){
+                    endDate.setValue(oldValue);
+                }
+            }
+        });
+        endTime.valueProperty().addListener(new ChangeListener<LocalTime>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalTime> observable, LocalTime oldValue, LocalTime newValue) {
+                if(newValue == null){
+                    endTime.setValue(oldValue);
+                }
+                LocalDateTime newLDT = LocalDateTime.of(endDate.getValue(),newValue);
+                LocalDateTime fromLDT = LocalDateTime.of(startDate.getValue(),startTime.getValue());
+                if(!newLDT.isAfter(fromLDT)){
+                    endTime.setValue(oldValue);
+                }
+            }
+        });
+
+        observableList = loadTaskList();
+        sublistFromDate.setValue(LocalDate.now());
+        sublistFromTime.setValue(LocalTime.now());
+        sublistToDate.setValue(LocalDate.now().plusDays(7));
+        sublistToTime.setValue(LocalTime.now());
+        sublist = FXCollections.observableArrayList();
+        refreshSublistBtn.getOnAction().handle(new ActionEvent());
+        sublistFromDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
+                if(newValue == null){
+                    sublistFromDate.setValue(oldValue);
+                    return;
+                }
+                LocalDateTime newLDT = LocalDateTime.of(newValue, sublistFromTime.getValue());
+                LocalDateTime toLDT = LocalDateTime.of(sublistToDate.getValue(), sublistToTime.getValue());
+                if(!newLDT.isBefore(toLDT)){
+                    sublistFromDate.setValue(oldValue);
+                    return;
+                }
+                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+            }
+        });
+        sublistFromTime.valueProperty().addListener(new ChangeListener<LocalTime>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalTime> observable, LocalTime oldValue, LocalTime newValue) {
+                if(newValue == null){
+                    sublistFromTime.setValue(oldValue);
+                    return;
+                }
+                LocalDateTime newLDT = LocalDateTime.of(sublistFromDate.getValue(),newValue);
+                LocalDateTime toLDT = LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue());
+                if(!newLDT.isBefore(toLDT)){
+                    sublistFromTime.setValue(oldValue);
+                    return;
+                }
+                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+            }
+        });
+        sublistToDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
+                if(newValue == null){
+                    sublistToDate.setValue(oldValue);
+                    return;
+                }
+                LocalDateTime newLDT = LocalDateTime.of(newValue, sublistToTime.getValue());
+                LocalDateTime fromLDT = LocalDateTime.of(sublistFromDate.getValue(), sublistFromTime.getValue());
+                if(!newLDT.isAfter(fromLDT)){
+                    sublistToDate.setValue(oldValue);
+                    return;
+                }
+                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+            }
+        });
+        sublistToTime.valueProperty().addListener(new ChangeListener<LocalTime>() {
+            @Override
+            public void changed(ObservableValue<? extends LocalTime> observable, LocalTime oldValue, LocalTime newValue) {
+                if(newValue == null){
+                    sublistToTime.setValue(oldValue);
+                    return;
+                }
+                LocalDateTime newLDT = LocalDateTime.of(sublistToDate.getValue(),newValue);
+                LocalDateTime fromLDT = LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue());
+                if(!newLDT.isAfter(fromLDT)){
+                    sublistToTime.setValue(oldValue);
+                    return;
+                }
+                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+            }
+        });
+
+
+        daysTxt.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                Matcher matcher = integerString.matcher(newValue);
+                if(!matcher.matches()){
+                    daysTxt.setText(oldValue);
+                }
+                if(Integer.parseInt(daysTxt.getText()) > 24854){
+                    daysTxt.setText(oldValue);
+                }
+            }
+        });
+        hoursTxt.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                Matcher matcher = integerString.matcher(newValue);
+                if(!matcher.matches()){
+                    hoursTxt.setText(oldValue);
+                }
+                if(Integer.parseInt(hoursTxt.getText()) > 23){
+                    hoursTxt.setText(oldValue);
+                }
+            }
+        });
+        minutesTxt.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                Matcher matcher = integerString.matcher(newValue);
+                if(!matcher.matches()){
+                    minutesTxt.setText(oldValue);
+                }
+                if(Integer.parseInt(minutesTxt.getText()) > 59){
+                    minutesTxt.setText(oldValue);
+                }
+            }
+        });
         /*
         * List initializing
         * */
-        ObservableList<Task> observableList = loadTaskList();
-        ObservableList<Task> observableWeekList = updateWeekList();
+        SimpleObjectProperty<ObservableList<Task>> observableListSimpleObjectProperty = new SimpleObjectProperty<>(observableList);
+        observableListSimpleObjectProperty.addListener(new ChangeListener<ObservableList<Task>>() {
+            @Override
+            public void changed(ObservableValue<? extends ObservableList<Task>> observable, ObservableList<Task> oldValue, ObservableList<Task> newValue) {
+                if(newValue == null){
+                    System.out.println("кто то обнулил таск-лист");
+                    observableListSimpleObjectProperty.setValue(oldValue);
+                }
+            }
+        });
+
+        SimpleObjectProperty<File> fileSimpleObjectProperty = new SimpleObjectProperty<>(tasksFile);
+        fileSimpleObjectProperty.addListener(new ChangeListener<File>() {
+            @Override
+            public void changed(ObservableValue<? extends File> observable, File oldValue, File newValue) {
+                if(newValue == null){
+                    System.out.println("кто то обнулил файл");
+
+                    fileSimpleObjectProperty.setValue(oldValue);
+                }
+            }
+        });
+
         observableList.addListener(new ListChangeListener<Task>() {
             @Override
             public void onChanged(Change<? extends Task> c) {
-                updateWeekList();
+                c.next();
+                if(c.wasAdded()){
+                    List <Task> addedSubList = (List <Task>)c.getAddedSubList();
+                    for(Task task : addedSubList){
+                        Date date = task.nextTimeAfter(Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue())));
+                        if(date == null){
+                            return;
+                        }
+                        if(!date.after(Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue())))){
+                            sublist.add(task);
+                        }
+                    }
+                }
+                if(c.wasRemoved()){
+                    List <Task> removedSublist = (List<Task>)c.getRemoved();
+                    sublist.removeAll(removedSublist);
+                }
+                saveTasks();
             }
         });
         /*
@@ -336,16 +493,17 @@ public class View extends Application {
         intervalClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
         isActiveClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
         tableAll.setItems(observableList);
+
         /*
          * "Week-task" table building
          * */
-        taskDetailClmn_week.setCellValueFactory(new PropertyValueFactory<>("observableDetails"));
-        timeClmn_week.setCellValueFactory(new PropertyValueFactory<>("observableTime"));
-        fromClmn_week.setCellValueFactory(new PropertyValueFactory<>("observableStart"));
-        toClmn_week.setCellValueFactory(new PropertyValueFactory<>("observableEnd"));
-        intervalClmn_week.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
-        isActiveClmn_week.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
-        tableWeek.setItems(updateWeekList());
+        taskDetailClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableDetails"));
+        timeClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableTime"));
+        fromClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableStart"));
+        toClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableEnd"));
+        intervalClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
+        isActiveClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
+        tableWeek.setItems(sublist);
         /*
         * Saving
         * */
@@ -355,31 +513,110 @@ public class View extends Application {
                 saveTasks();
             }
         });
+        /*
+        * Editing task properties
+         */
+        MenuItem editMenuItemAll = new MenuItem("Edit");
+        MenuItem removeMenuItemAll = new MenuItem("Remove");
+        removeMenuItemAll.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Task task = tableAll.getSelectionModel().getSelectedItem();
+                if(task == null){
+                    return;
+                }
+                try {
+                    Stage stage = getRemoveTaskStage(task, observableList, primStage);
+                    stage.show();
+                }catch (IOException e){
+                    e.printStackTrace();// logger?
+                }
+                /*Task task = tableAll.getSelectionModel().getSelectedItem();
+                if(task == null){
+                    return; // выдать уведомление
+                }
+                tableAll.getItems().removeAll(task);
+                tableWeek.getItems().removeAll(task);*/
+            }
+        });
 
+        editMenuItemAll.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Task task = tableAll.getSelectionModel().getSelectedItem();
+                if(task == null){
+                    return;
+                }
+                try {
+                    Stage stage = getEditTaskStage(task, primStage);
+                    stage.show();
+                }catch (IOException e){
+                    e.printStackTrace();// logger?
+                }
+            }
+        });
+        ContextMenu editMenuAll = new ContextMenu(editMenuItemAll, removeMenuItemAll);
+        editMenuAll.setAutoHide(true);
+        tableAll.setContextMenu(editMenuAll);
+
+        MenuItem editMenuItemWeek = new MenuItem("Edit");
+        MenuItem removeMenuItemWeek = new MenuItem("Remove");
+        removeMenuItemWeek.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Task task = tableWeek.getSelectionModel().getSelectedItem();
+                if(task == null){
+                    return;
+                }
+                try {
+                    Stage stage = getRemoveTaskStage(task, observableList, primStage);
+                    stage.show();
+                }catch (IOException e){
+                    e.printStackTrace();// logger?
+                }
+            }
+        });
+        editMenuItemWeek.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Task task = tableWeek.getSelectionModel().getSelectedItem();
+                if(task == null){
+                    return;
+                }
+                try {
+                    Stage stage = getEditTaskStage(task, primStage);
+                    stage.show();
+                }catch (IOException e){
+                    e.printStackTrace();// logger?
+                }
+            }
+        });
+        ContextMenu editMenuWeek = new ContextMenu(editMenuItemWeek,removeMenuItemWeek);
+        editMenuWeek.setAutoHide(true);
+        tableWeek.setContextMenu(editMenuWeek);
     }
 
-    /*@Override
-    public void stop() throws Exception {
-        controller.saveTasks();
-    }*/
-
     private ObservableList<Task> loadTaskList() throws IOException{
+        System.out.println(observableList);
         observableList = FXCollections.observableArrayList();
+        System.out.println(observableList);
         TaskIO.readText(observableList,tasksFile);
+        System.out.println(observableList);
         return observableList;
     }
 
     private void saveTasks () {
         try {
+            System.out.println(observableList);
+            System.out.println(tasksFile);
             TaskIO.writeText(observableList,tasksFile);
         }catch (IOException e){
             System.out.println(e.getCause());
         }
     }
 
-    @SuppressWarnings("Unchecked assignment: 'javafx.collections.ObservableList' to 'javafx.collections.ObservableList<ua.sumdu.j2se.Birintsev.tasks.Task>'")
-    private ObservableList<Task> updateWeekList(){
-        observableWeekList = FXCollections.observableArrayList((List)Tasks.incoming(observableList, new Date(), new Date(System.currentTimeMillis() + 31536000000L)));
-        return observableWeekList;
+    @Override
+    public void stop() throws Exception {
+        saveTasks();
     }
 }

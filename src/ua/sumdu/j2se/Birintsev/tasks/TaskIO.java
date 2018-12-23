@@ -9,16 +9,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import ua.sumdu.j2se.Birintsev.tasks.Utill;
+
+import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
 
 public class TaskIO {
 
-    public final static String dateFormate = "yyyy-MM-dd HH:mm:ss.SSS";
-    public final static String dateCellFormate = "yyyy-MM-dd HH:mm";
-    public static final String regexpRepetative = "^\"(.*)\" from \\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})] to \\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})] every \\[(.*)](.*)[.;]$";
-    public static final String regexpNotRepetative = "^\"(.*)\" at \\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})](.*)[.;]$";
-    public static final SimpleDateFormat dateCellFormater = new SimpleDateFormat(dateCellFormate);
-    public static final Pattern patternRepetative = Pattern.compile(regexpRepetative);
-    public static final Pattern patternNotRepetative = Pattern.compile(regexpNotRepetative);
+
 
     public static void write(TaskList tasks, OutputStream out) throws IOException {
         DataOutputStream dataOutputStream = null;
@@ -47,9 +44,6 @@ public class TaskIO {
     }
 
     public static void read(TaskList tasks, InputStream in) throws IOException {
-        /*if (in.available() == 0) {
-            return; // ??? logger/exception?
-        }*/
         DataInputStream dataInputStream = null;
         try {
             dataInputStream = new DataInputStream(in);
@@ -96,9 +90,6 @@ public class TaskIO {
     }
 
     public static void readBinary(TaskList tasks, File file) throws IOException{
-        /*if(!file.canRead()){
-            return; ///???
-        }*/
         FileInputStream fileInputStream = null;
         try{
             fileInputStream = new FileInputStream(file);
@@ -123,9 +114,6 @@ public class TaskIO {
     }
 
     public static void read(TaskList tasks, Reader in) throws IOException, ParseException{
-        /*if(!in.ready()){
-            return; // ??? поток не готов быть считан
-        }*/
         BufferedReader bufferedReader = null;
         try{
             bufferedReader = new BufferedReader(in);
@@ -168,38 +156,9 @@ public class TaskIO {
         }
     }
 
-    public static int parseInterval(String string){
-        if (string == null){
-            throw new IllegalArgumentException("The string must not be null");
-        }
-        int seconds = 0;
-        Pattern pattern = Pattern.compile("(\\d) day");
-        Matcher matcher = pattern.matcher(string);
-        if(matcher.find()){
-            seconds += Integer.parseInt(matcher.group(1)) * 86400;
-        }
-        pattern = Pattern.compile("(\\d) hour");
-        matcher = pattern.matcher(string);
-        if(matcher.find()){
-            seconds += Integer.parseInt(matcher.group(1)) * 3600;
-        }
-        pattern = Pattern.compile("(\\d) minute");
-        matcher = pattern.matcher(string);
-        if(matcher.find()){
-            seconds += Integer.parseInt(matcher.group(1)) * 60;
-        }
-        pattern = Pattern.compile("(\\d) second");
-        matcher = pattern.matcher(string);
-        if(matcher.find()){
-            seconds += Integer.parseInt(matcher.group(1));
-        }
-        return seconds;
-    }
+
 
     public static void writeText(TaskList tasks, File file) throws IOException{
-        /*if(!file.canWrite()){
-            return; ///???
-        }*/
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(file));
@@ -210,9 +169,6 @@ public class TaskIO {
     }
 
     public static void readText(TaskList tasks, File file) throws IOException{
-        /*if(!file.canRead()){
-            return; ///???
-        }*/
         BufferedReader bufferedReader =  null;
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
@@ -254,9 +210,6 @@ public class TaskIO {
     }
 
     public static void read(List <Task> tasks, InputStream in) throws IOException {
-        /*if (in.available() == 0) {
-            return; // ??? logger/exception?
-        }*/
         DataInputStream dataInputStream = null;
         try {
             dataInputStream = new DataInputStream(in);
@@ -303,9 +256,6 @@ public class TaskIO {
     }
 
     public static void readBinary(List <Task> tasks, File file) throws IOException{
-        /*if(!file.canRead()){
-            return; ///???
-        }*/
         FileInputStream fileInputStream = null;
         try{
             fileInputStream = new FileInputStream(file);
@@ -340,9 +290,6 @@ public class TaskIO {
     }
 
     public static void read(List <Task> tasks, Reader in) throws IOException, ParseException{
-        /*if(!in.ready()){
-            return; // ??? поток не готов быть считан
-        }*/
         BufferedReader bufferedReader = null;
         try{
             bufferedReader = new BufferedReader(in);
@@ -367,14 +314,14 @@ public class TaskIO {
                         String details = matcher.group(1).replace("\"\"", "\"");
                         Date start = dateFormat.parse(matcher.group(2));
                         Date end = dateFormat.parse(matcher.group(3));
-                        int interval = TaskIO.parseInterval(matcher.group(4));
+                        int interval = parseInterval(matcher.group(4));
                         // if seconds == 0 -> logger warning???
                         boolean isActive = matcher.group(5).length() == 0;
                         task = new Task(details, start, end, interval);
                         task.setActive(isActive);
                         tasks.add(task);
                     } else {
-                        throw new IOException(new StringBuilder("Wrong stringToParse value :").append(stringToParse).toString());
+                        throw new IOException(new StringBuilder("Wrong stringToParse value :").append(stringToParse).toString()); // logger
                     }
                 }
                 stringToParse = bufferedReader.readLine();
@@ -387,9 +334,6 @@ public class TaskIO {
     }
 
     public static void writeText(List <Task> tasks, File file) throws IOException{
-        /*if(!file.canWrite()){
-            return; ///???
-        }*/
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(file));
@@ -400,9 +344,6 @@ public class TaskIO {
     }
 
     public static void readText(List <Task> tasks, File file) throws IOException{
-        /*if(!file.canRead()){
-            return; ///???
-        }*/
         BufferedReader bufferedReader =  null;
         try {
             bufferedReader = new BufferedReader(new FileReader(file));
@@ -413,7 +354,6 @@ public class TaskIO {
             if(bufferedReader != null){
                 bufferedReader.close();
             }
-
         }
     }
 }

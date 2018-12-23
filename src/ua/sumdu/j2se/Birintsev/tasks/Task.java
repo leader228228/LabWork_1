@@ -1,5 +1,6 @@
 package ua.sumdu.j2se.Birintsev.tasks;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
@@ -10,11 +11,14 @@ import javax.management.JMRuntimeException;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ua.sumdu.j2se.Birintsev.tasks.TaskIO.dateCellFormater;
+import static ua.sumdu.j2se.Birintsev.tasks.Utill.dateCellFormater;
+import static ua.sumdu.j2se.Birintsev.tasks.Utill.dateFormate;
 
 
 public class Task implements Cloneable, Serializable {
@@ -37,6 +41,23 @@ public class Task implements Cloneable, Serializable {
     private StringProperty observableEnd;
     private StringProperty observableIsActive;
 
+    private LocalDateTime timeLocalDateTime;
+    private LocalDateTime startLocalDateTime;
+    private LocalDateTime endLocalDateTime;
+
+    public LocalDateTime getTimeLocalDateTime(){
+        return Utill.dateToLocalDateTime(time);
+    }
+
+    public LocalDateTime getStartLocalDateTime(){
+        return Utill.dateToLocalDateTime(start);
+    }
+
+    public LocalDateTime getEndLocalDateTime(){
+        return Utill.dateToLocalDateTime(end);
+    }
+
+
     public String getObservableDetails() {
         observableDetails.set(details);
         return observableDetails.get();
@@ -51,7 +72,11 @@ public class Task implements Cloneable, Serializable {
     }
 
     public String getObservableTime() {
-        setObservableStart(dateCellFormater.format(time));
+        if(isRepeated){
+            setObservableTime("");
+        } else {
+            setObservableTime(dateCellFormater.format(time));
+        }
         return observableTime.get();
     }
 
@@ -62,6 +87,19 @@ public class Task implements Cloneable, Serializable {
     private void setObservableTime(String observableTime) {
         this.observableTime.set(observableTime);
     }
+
+    public StringProperty getObservableIntervalProperty(){
+        return observableInterval;
+    }
+
+    public StringProperty getObservableEndProperty(){
+        return observableEnd;
+    }
+
+    public StringProperty getObservableStartProperty(){
+        return observableStart;
+    }
+
 
     public String getObservableInterval() {
         String interval;
@@ -81,12 +119,16 @@ public class Task implements Cloneable, Serializable {
         return observableInterval;
     }
 
-    private void setObservableInterval(String observableInterval) {
+    public void setObservableInterval(String observableInterval) {
         this.observableInterval.set(observableInterval);
     }
 
     public String getObservableStart() {
-        setObservableStart(dateCellFormater.format(start));
+        if(isRepeated){
+            setObservableStart(dateCellFormater.format(start));
+        }else{
+            setObservableStart("");
+        }
         return observableStart.get();
     }
 
@@ -99,7 +141,11 @@ public class Task implements Cloneable, Serializable {
     }
 
     public String getObservableEnd() {
-        setObservableEnd(dateCellFormater.format(end));
+        if(isRepeated){
+            setObservableEnd(dateCellFormater.format(end));
+        }else{
+            setObservableEnd("");
+        }
         return observableEnd.get();
     }
 
@@ -107,7 +153,7 @@ public class Task implements Cloneable, Serializable {
         return observableEnd;
     }
 
-    private void setObservableEnd(String observableEnd) {
+    public void setObservableEnd(String observableEnd) {
         this.observableEnd.set(observableEnd);
     }
 
@@ -129,13 +175,14 @@ public class Task implements Cloneable, Serializable {
     }
 
     public Task(String title, Date time) {
-        if (title == null || title.equals("")) {
+        if (title == null || title.equals("") || title.equals("\uFEFF")) {
             throw new IllegalArgumentException("The details of task must be set");
         }
         details = title;
         this.time = this.start = this.end = time;
 
         observableDetails = new SimpleStringProperty();
+        observableDetails.set(details);
         observableTime = new SimpleStringProperty();
         observableStart = new SimpleStringProperty();
         observableEnd = new SimpleStringProperty();
@@ -153,6 +200,9 @@ public class Task implements Cloneable, Serializable {
     }
 
     public Task(String title, Date start, Date end, int interval) {
+        if (title == null || title.equals("") || title.equals("\uFEFF")) {
+            throw new IllegalArgumentException("The details of task must be set");
+        }
         if (start.after(end)) {
             throw new IllegalArgumentException("Start time can not be less than end time");
         }
@@ -186,11 +236,16 @@ public class Task implements Cloneable, Serializable {
         return details;
     }
 
+    public StringProperty getObservableTimeProperty(){
+        return observableTime;
+    }
+
     public void setTitle(String title) {
         if (title == null) {
             throw new IllegalArgumentException("The details of task must be set");
         }
         details = title;
+        observableDetailsProperty().set(title);
     }
 
     public boolean isActive() {
@@ -214,6 +269,9 @@ public class Task implements Cloneable, Serializable {
         isRepeated = false;
         this.time = this.start = this.end = time;
         getObservableTime();
+        getObservableStart();
+        getObservableEnd();
+        getObservableInterval();
     }
 
     public Date getStartTime() {
@@ -240,6 +298,22 @@ public class Task implements Cloneable, Serializable {
         }
     }
 
+    public void setRepeated(boolean repeated) {
+        isRepeated = repeated;
+    }
+
+    public void setStart(Date start) {
+        this.start = start;
+    }
+
+    public void setEnd(Date end) {
+        this.end = end;
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
+    }
+
     public void setTime(Date start, Date end, int interval) {
         if(start == null){
             throw new IllegalArgumentException("Parameter start must not be null");
@@ -257,8 +331,10 @@ public class Task implements Cloneable, Serializable {
         this.start = start;
         this.end = end;
         this.interval = interval;
-        getObservableEnd();
+        getObservableTime();
         getObservableStart();
+        getObservableEnd();
+        getObservableInterval();
     }
 
     public boolean isRepeated() {
@@ -286,32 +362,11 @@ public class Task implements Cloneable, Serializable {
         return null;        
     }
 
-   /* @Override
-    public String toString(){
-        String string;
-        string = (isActive ? "Active " : "Unactive ");
-        string = string + "task: " + details;
-        string = string + ",time is: " + (isRepeated ? (start + "-" + end + "(" + interval + ")") : time);
-        return string;
-    }*/
-
-    /*@Override
-    public String toString(){
-        StringBuilder string = new StringBuilder();
-        string.append(isActive ? "Active " : "Unactive ").append("task: ").append(details).append(",time is: ");
-        if(isRepeated){
-            string.append(start).append("-").append(end).append("(").append(interval).append(")");
-        }else{
-            string.append(time);
-        }
-        return string.toString();
-    }*/
-
     @Override
     public String toString() {
         StringBuilder taskInfo = new StringBuilder("\"");
         taskInfo.append(details.replace("\"", "\"\"")).append('"');
-        SimpleDateFormat dateFormat = new SimpleDateFormat(new StringBuilder("[").append(TaskIO.dateFormate).append("]").toString());
+        SimpleDateFormat dateFormat = new SimpleDateFormat(new StringBuilder("[").append(dateFormate).append("]").toString());
         if(isRepeated){
             taskInfo.append(" from ").append(dateFormat.format(start)).append(" to ").append(dateFormat.format(end)).append(" every [");
             //int interval = this.interval; // in seconds
