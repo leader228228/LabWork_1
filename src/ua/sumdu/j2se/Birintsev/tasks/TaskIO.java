@@ -334,6 +334,7 @@ public class TaskIO {
     }
 
     public static void writeText(List <Task> tasks, File file) throws IOException{
+        System.out.println("wrinitg starts");
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(file));
@@ -341,6 +342,7 @@ public class TaskIO {
         } finally {
             bufferedWriter.close();
         }
+        System.out.println("Writing ends");
     }
 
     public static void readText(List <Task> tasks, File file) throws IOException{

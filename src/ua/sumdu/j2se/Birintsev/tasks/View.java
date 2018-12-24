@@ -34,6 +34,7 @@ import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -150,9 +151,6 @@ public class View extends Application {
     private TableView<Task> tableWeek;
 
     @FXML
-    private Button refreshSublistBtn;
-
-    @FXML
     private TableColumn<Task, String> taskDetailClmn_sublist;
 
     @FXML
@@ -199,6 +197,7 @@ public class View extends Application {
 
     @FXML
     public void createNewTask(){
+        System.out.println("Creation starts");
         Task task;
         String details = taskDetails.getText();
         if(details == "" || details == null){
@@ -216,8 +215,13 @@ public class View extends Application {
             task = new Task(details, start);
         }
         task.setActive(isActive.isSelected());
+        System.out.println("adding starts");
         observableList.add(task);
-        refreshSublistBtn.getOnAction().handle(new ActionEvent());
+        System.out.println("adding ends");
+        System.out.println("refreshing sublist starts");
+        refreshSublist();
+        System.out.println("refreshing sublist ends");
+        System.out.println("creation ends");
     }
 
     /**
@@ -228,17 +232,33 @@ public class View extends Application {
 
     }
 
-    @FXML
-    void refreshSublist(ActionEvent event) {
-        System.out.println(sublist);
-        sublist.clear();
-        System.out.println(sublist);
+    void refreshSublist() {
+        System.out.println("refreshing starts");
+        System.out.println("from-to starts");
+        Date from = Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue()));
+        Date to = Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue()));
+        System.out.println("from-to ends");
+        System.out.println("creation new non-observable starts");
+        Iterable <Task> nonObservableSublist = Tasks.incoming( observableList, from, to);
+        System.out.println("creation new non-oobservable ends");
 
+        System.out.println("creation new observable starts");
+
+        System.out.println("creation new observable ends");
+        System.out.println("setting new observable starts");
+        tableWeek.setItems(FXCollections.observableList((List<Task>)nonObservableSublist));
+        System.out.println("setting new observable ends");
+
+        System.out.println("refreshing ends");
+        /*System.out.println("clearing sublist starts");
+        sublist.clear();
+        System.out.println("clearing sublist ends");
+        System.out.println("adding new items to sublist starts");
         sublist.addAll((Collection<Task>) Tasks.incoming(
                 observableList,
                 Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue())),
                 Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue()))));
-        System.out.println(sublist);
+        System.out.println("adding new items to sublist ends");*/
 
     }
 
@@ -248,25 +268,23 @@ public class View extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        System.out.println();
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Task manager");
         primaryStage.setScene(new Scene(root, primaryStage.getWidth(), primaryStage.getHeight()));
         primStage = primaryStage;
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                saveTasks();
-            }
-        });
         primaryStage.show();
     }
 
     @FXML
     private void initialize() throws IOException {
+        System.out.println("initialization starts");
         tasksFile = new File(new StringBuilder(tasklistsDir).append(savedTasksFileName).toString());
         if(!tasksFile.canRead()){
             tasksFile.createNewFile();
         }
+        observableList = loadTaskList();
+
         startDate.setValue(LocalDate.now());
         startTime.setValue(LocalTime.now());
         endDate.setValue(LocalDate.now().plusDays(7));
@@ -325,13 +343,13 @@ public class View extends Application {
             }
         });
 
-        observableList = loadTaskList();
         sublistFromDate.setValue(LocalDate.now());
         sublistFromTime.setValue(LocalTime.now());
         sublistToDate.setValue(LocalDate.now().plusDays(7));
         sublistToTime.setValue(LocalTime.now());
+
         sublist = FXCollections.observableArrayList();
-        refreshSublistBtn.getOnAction().handle(new ActionEvent());
+
         sublistFromDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
             public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
@@ -345,7 +363,7 @@ public class View extends Application {
                     sublistFromDate.setValue(oldValue);
                     return;
                 }
-                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+                refreshSublist();
             }
         });
         sublistFromTime.valueProperty().addListener(new ChangeListener<LocalTime>() {
@@ -361,7 +379,7 @@ public class View extends Application {
                     sublistFromTime.setValue(oldValue);
                     return;
                 }
-                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+                refreshSublist();
             }
         });
         sublistToDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
@@ -377,7 +395,7 @@ public class View extends Application {
                     sublistToDate.setValue(oldValue);
                     return;
                 }
-                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+                refreshSublist();
             }
         });
         sublistToTime.valueProperty().addListener(new ChangeListener<LocalTime>() {
@@ -393,10 +411,9 @@ public class View extends Application {
                     sublistToTime.setValue(oldValue);
                     return;
                 }
-                refreshSublistBtn.getOnAction().handle(new ActionEvent());
+                refreshSublist();
             }
         });
-
 
         daysTxt.textProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -437,29 +454,6 @@ public class View extends Application {
         /*
         * List initializing
         * */
-        SimpleObjectProperty<ObservableList<Task>> observableListSimpleObjectProperty = new SimpleObjectProperty<>(observableList);
-        observableListSimpleObjectProperty.addListener(new ChangeListener<ObservableList<Task>>() {
-            @Override
-            public void changed(ObservableValue<? extends ObservableList<Task>> observable, ObservableList<Task> oldValue, ObservableList<Task> newValue) {
-                if(newValue == null){
-                    System.out.println("кто то обнулил таск-лист");
-                    observableListSimpleObjectProperty.setValue(oldValue);
-                }
-            }
-        });
-
-        SimpleObjectProperty<File> fileSimpleObjectProperty = new SimpleObjectProperty<>(tasksFile);
-        fileSimpleObjectProperty.addListener(new ChangeListener<File>() {
-            @Override
-            public void changed(ObservableValue<? extends File> observable, File oldValue, File newValue) {
-                if(newValue == null){
-                    System.out.println("кто то обнулил файл");
-
-                    fileSimpleObjectProperty.setValue(oldValue);
-                }
-            }
-        });
-
         observableList.addListener(new ListChangeListener<Task>() {
             @Override
             public void onChanged(Change<? extends Task> c) {
@@ -493,7 +487,6 @@ public class View extends Application {
         intervalClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
         isActiveClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
         tableAll.setItems(observableList);
-
         /*
          * "Week-task" table building
          * */
@@ -504,6 +497,8 @@ public class View extends Application {
         intervalClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
         isActiveClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
         tableWeek.setItems(sublist);
+        refreshSublist();
+
         /*
         * Saving
         * */
@@ -526,17 +521,11 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getRemoveTaskStage(task, observableList, primStage);
+                    Stage stage = getRemoveTaskStage(task, observableList, tasksFile, primStage);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
                 }
-                /*Task task = tableAll.getSelectionModel().getSelectedItem();
-                if(task == null){
-                    return; // выдать уведомление
-                }
-                tableAll.getItems().removeAll(task);
-                tableWeek.getItems().removeAll(task);*/
             }
         });
 
@@ -548,7 +537,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getEditTaskStage(task, primStage);
+                    Stage stage = getEditTaskStage(task, observableList, tasksFile, primStage);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -569,7 +558,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getRemoveTaskStage(task, observableList, primStage);
+                    Stage stage = getRemoveTaskStage(task, observableList, tasksFile, primStage);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -584,7 +573,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getEditTaskStage(task, primStage);
+                    Stage stage = getEditTaskStage(task, observableList, tasksFile, primStage);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -594,29 +583,26 @@ public class View extends Application {
         ContextMenu editMenuWeek = new ContextMenu(editMenuItemWeek,removeMenuItemWeek);
         editMenuWeek.setAutoHide(true);
         tableWeek.setContextMenu(editMenuWeek);
+        System.out.println("initialization ends");
     }
 
     private ObservableList<Task> loadTaskList() throws IOException{
-        System.out.println(observableList);
         observableList = FXCollections.observableArrayList();
-        System.out.println(observableList);
         TaskIO.readText(observableList,tasksFile);
-        System.out.println(observableList);
         return observableList;
     }
 
     private void saveTasks () {
+        System.out.println("saving starts view");
         try {
-            System.out.println(observableList);
-            System.out.println(tasksFile);
             TaskIO.writeText(observableList,tasksFile);
         }catch (IOException e){
             System.out.println(e.getCause());
         }
+        System.out.println("saving ends view");
     }
 
-    @Override
-    public void stop() throws Exception {
-        saveTasks();
+    public Stage getPrimStage(){
+        return primStage;
     }
 }

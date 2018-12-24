@@ -46,7 +46,6 @@
                         <TableColumn fx:id="isActiveClmn_sublist" maxWidth="146.4000244140625" minWidth="50.0" prefWidth="72.79998779296875" text="Active" />
                      </columns>
                   </TableView>
-                  <Button fx:id="refreshSublistBtn" layoutX="667.0" layoutY="308.0" mnemonicParsing="false" onAction="#refreshSublist" text="Refresh" />
                   <JFXDatePicker fx:id="sublistFromDate" layoutX="42.0" layoutY="38.0" prefHeight="28.0" prefWidth="100.0" />
                   <JFXDatePicker fx:id="sublistToDate" layoutX="459.0" layoutY="38.0" prefHeight="28.0" prefWidth="100.0" />
                   <JFXTimePicker fx:id="sublistFromTime" layoutX="188.0" layoutY="38.0" prefWidth="100.0" />
