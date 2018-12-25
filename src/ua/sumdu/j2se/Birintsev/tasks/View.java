@@ -1,6 +1,5 @@
 package ua.sumdu.j2se.Birintsev.tasks;
 
-
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTimePicker;
@@ -31,7 +30,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -42,13 +40,14 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javafx.scene.*;
 
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
-
 
 public class View extends Application {
 
     public View() {
+        mainController = this;
     }
 
     private static final String tasklistsDir = "res/tasklists/";
@@ -62,6 +61,8 @@ public class View extends Application {
     private ObservableList<Task> observableList;
 
     private Stage primStage;
+
+    private View mainController;
 
     @FXML
     private TitledPane allTasksTitledPane;
@@ -233,33 +234,10 @@ public class View extends Application {
     }
 
     void refreshSublist() {
-        System.out.println("refreshing starts");
-        System.out.println("from-to starts");
         Date from = Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue()));
         Date to = Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue()));
-        System.out.println("from-to ends");
-        System.out.println("creation new non-observable starts");
         Iterable <Task> nonObservableSublist = Tasks.incoming( observableList, from, to);
-        System.out.println("creation new non-oobservable ends");
-
-        System.out.println("creation new observable starts");
-
-        System.out.println("creation new observable ends");
-        System.out.println("setting new observable starts");
         tableWeek.setItems(FXCollections.observableList((List<Task>)nonObservableSublist));
-        System.out.println("setting new observable ends");
-
-        System.out.println("refreshing ends");
-        /*System.out.println("clearing sublist starts");
-        sublist.clear();
-        System.out.println("clearing sublist ends");
-        System.out.println("adding new items to sublist starts");
-        sublist.addAll((Collection<Task>) Tasks.incoming(
-                observableList,
-                Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue())),
-                Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue()))));
-        System.out.println("adding new items to sublist ends");*/
-
     }
 
     public static void main(String[] args) {
@@ -278,17 +256,23 @@ public class View extends Application {
 
     @FXML
     private void initialize() throws IOException {
-        System.out.println("initialization starts");
+
         tasksFile = new File(new StringBuilder(tasklistsDir).append(savedTasksFileName).toString());
         if(!tasksFile.canRead()){
             tasksFile.createNewFile();
         }
         observableList = loadTaskList();
+        /*
+        * Starting the notificator
+        * */
+        Notificator notificator = new Notificator(observableList);
+        notificator.start();
 
         startDate.setValue(LocalDate.now());
         startTime.setValue(LocalTime.now());
         endDate.setValue(LocalDate.now().plusDays(7));
         endTime.setValue(LocalTime.now());
+
 
         startDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
@@ -521,7 +505,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getRemoveTaskStage(task, observableList, tasksFile, primStage);
+                    Stage stage = getRemoveTaskStage(task, primStage, mainController);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -537,7 +521,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getEditTaskStage(task, observableList, tasksFile, primStage);
+                    Stage stage = getEditTaskStage(task, primStage, mainController);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -558,7 +542,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getRemoveTaskStage(task, observableList, tasksFile, primStage);
+                    Stage stage = getRemoveTaskStage(task, primStage, mainController);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -573,7 +557,7 @@ public class View extends Application {
                     return;
                 }
                 try {
-                    Stage stage = getEditTaskStage(task, observableList, tasksFile, primStage);
+                    Stage stage = getEditTaskStage(task, primStage, mainController);
                     stage.show();
                 }catch (IOException e){
                     e.printStackTrace();// logger?
@@ -583,26 +567,30 @@ public class View extends Application {
         ContextMenu editMenuWeek = new ContextMenu(editMenuItemWeek,removeMenuItemWeek);
         editMenuWeek.setAutoHide(true);
         tableWeek.setContextMenu(editMenuWeek);
-        System.out.println("initialization ends");
     }
 
     private ObservableList<Task> loadTaskList() throws IOException{
-        observableList = FXCollections.observableArrayList();
+        List <Task> list = new LinkedList<Task>();
+        observableList = FXCollections.observableArrayList(Collections.synchronizedList(list));
         TaskIO.readText(observableList,tasksFile);
         return observableList;
     }
 
-    private void saveTasks () {
-        System.out.println("saving starts view");
+    public void saveTasks () {
         try {
             TaskIO.writeText(observableList,tasksFile);
         }catch (IOException e){
             System.out.println(e.getCause());
         }
-        System.out.println("saving ends view");
     }
 
     public Stage getPrimStage(){
         return primStage;
     }
+
+    public boolean removeTask(Task task){
+        return observableList.removeAll(task) && sublist.removeAll(task);
+    }
+
+
 }
