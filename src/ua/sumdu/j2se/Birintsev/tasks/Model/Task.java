@@ -1,18 +1,12 @@
-package ua.sumdu.j2se.Birintsev.tasks;
+package ua.sumdu.j2se.Birintsev.tasks.Model;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.property.adapter.JavaBeanStringProperty;
-import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
-import javafx.beans.value.ObservableStringValue;
+import ua.sumdu.j2se.Birintsev.tasks.Utill;
 
-import javax.management.JMRuntimeException;
 import java.io.Serializable;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +17,7 @@ import static ua.sumdu.j2se.Birintsev.tasks.Utill.dateFormate;
 
 public class Task implements Cloneable, Serializable {
 
+    boolean wasNotified;
     private String details;
     private boolean isActive;
     private boolean isRepeated;

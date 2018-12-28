@@ -1,4 +1,4 @@
-package ua.sumdu.j2se.Birintsev.tasks;
+package ua.sumdu.j2se.Birintsev.tasks.Model;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

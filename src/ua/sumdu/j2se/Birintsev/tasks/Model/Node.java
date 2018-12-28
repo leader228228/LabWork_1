@@ -1,6 +1,4 @@
-package ua.sumdu.j2se.Birintsev.tasks;
-
-import java.util.Objects;
+package ua.sumdu.j2se.Birintsev.tasks.Model;
 
 class Node implements Cloneable{
 

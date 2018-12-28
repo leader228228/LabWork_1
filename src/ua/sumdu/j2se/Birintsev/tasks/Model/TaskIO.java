@@ -1,15 +1,12 @@
-package ua.sumdu.j2se.Birintsev.tasks;
+package ua.sumdu.j2se.Birintsev.tasks.Model;
 
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import ua.sumdu.j2se.Birintsev.tasks.Utill;
 
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
 

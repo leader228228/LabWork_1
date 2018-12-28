@@ -1,50 +1,51 @@
-package ua.sumdu.j2se.Birintsev.tasks;
+package ua.sumdu.j2se.Birintsev.tasks.Contorllers;
 
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTimePicker;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableArray;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
+
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javafx.scene.*;
 
+import ua.sumdu.j2se.Birintsev.tasks.Model.Task;
+import ua.sumdu.j2se.Birintsev.tasks.Model.TaskIO;
+import ua.sumdu.j2se.Birintsev.tasks.Model.Tasks;
+import ua.sumdu.j2se.Birintsev.tasks.Utill;
+
+import static java.lang.Thread.currentThread;
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
 
 public class View extends Application {
+
+    //final static Logger logger = Logger.getLogger(View.class.getName());
 
     public View() {
         mainController = this;
@@ -63,6 +64,8 @@ public class View extends Application {
     private Stage primStage;
 
     private View mainController;
+
+    private Notificator notificator;
 
     @FXML
     private TitledPane allTasksTitledPane;
@@ -198,9 +201,12 @@ public class View extends Application {
 
     @FXML
     public void createNewTask(){
-        System.out.println("Creation starts");
         Task task;
         String details = taskDetails.getText();
+        if(details == null){
+            taskDetails.setPromptText("Please, enter the task");
+            return;
+        }
         if(details == "" || details == null){
             return; // logger + notification
         }
@@ -216,15 +222,9 @@ public class View extends Application {
             task = new Task(details, start);
         }
         task.setActive(isActive.isSelected());
-        System.out.println("adding starts");
         observableList.add(task);
-        System.out.println("adding ends");
-        System.out.println("refreshing sublist starts");
         refreshSublist();
-        System.out.println("refreshing sublist ends");
-        System.out.println("creation ends");
     }
-
     /**
      * Was written to block the context menu for an element
      */
@@ -247,16 +247,42 @@ public class View extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         System.out.println();
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(new URL("res/fxml/sample.fxml"));
+        //Parent root = FXMLLoader.load(getClass().getResource("../../../../../../../res/fxml/sample.fxml"));
         primaryStage.setTitle("Task manager");
         primaryStage.setScene(new Scene(root, primaryStage.getWidth(), primaryStage.getHeight()));
         primStage = primaryStage;
+        //AquaFx.style();
+        primaryStage.getScene().getStylesheets().add(View.class.getResource("theme.css").toExternalForm());
+        primaryStage.setResizable(false);
         primaryStage.show();
+    }
+
+    private void notificatorLaunch(){
+        //Obtain only one instance of the SystemTray object
+        SystemTray tray = SystemTray.getSystemTray();
+        //If the icon is a file
+        Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+        //Alternative (if the icon is on the classpath):
+        //Image image = Toolkit.getToolkit().createImage(getClass().getResource("icon.png"));
+        TrayIcon trayIcon = new TrayIcon(image, "Tray Demo");
+        //Let the system resize the image if needed
+        trayIcon.setImageAutoSize(true);
+        //Set tooltip text for the tray icon
+        trayIcon.setToolTip("System tray icon demo");
+        try {
+            tray.add(trayIcon);
+        } catch (AWTException e) {
+            e.printStackTrace(); // logger
+        }
+        Notificator notificator = new Notificator(observableList, trayIcon);
+        notificator.setDaemon(true);
+        notificator.start();
     }
 
     @FXML
     private void initialize() throws IOException {
-
+        System.out.println(currentThread());
         tasksFile = new File(new StringBuilder(tasklistsDir).append(savedTasksFileName).toString());
         if(!tasksFile.canRead()){
             tasksFile.createNewFile();
@@ -265,15 +291,22 @@ public class View extends Application {
         /*
         * Starting the notificator
         * */
-        Notificator notificator = new Notificator(observableList);
-        notificator.start();
-
+        notificatorLaunch();
         startDate.setValue(LocalDate.now());
         startTime.setValue(LocalTime.now());
         endDate.setValue(LocalDate.now().plusDays(7));
         endTime.setValue(LocalTime.now());
-
-
+        taskDetails.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue == null || "".equals(newValue) || newValue.length() == 0 || "\uFEFF".equals(newValue)){
+                    addTaskBtn.setVisible(false);
+                } else {
+                    addTaskBtn.setVisible(true);
+                }
+            }
+        });
+        addTaskBtn.setVisible(false);
         startDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
             public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
@@ -326,14 +359,11 @@ public class View extends Application {
                 }
             }
         });
-
         sublistFromDate.setValue(LocalDate.now());
         sublistFromTime.setValue(LocalTime.now());
         sublistToDate.setValue(LocalDate.now().plusDays(7));
         sublistToTime.setValue(LocalTime.now());
-
         sublist = FXCollections.observableArrayList();
-
         sublistFromDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
             public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
@@ -398,7 +428,6 @@ public class View extends Application {
                 refreshSublist();
             }
         });
-
         daysTxt.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -588,9 +617,13 @@ public class View extends Application {
         return primStage;
     }
 
-    public boolean removeTask(Task task){
-        return observableList.removeAll(task) && sublist.removeAll(task);
+    public void removeTask(Task task){
+        observableList.removeAll(task);
+        sublist.removeAll(task);
     }
 
-
+    @Override
+    public void stop() throws Exception {
+        System.exit(1);
+    }
 }

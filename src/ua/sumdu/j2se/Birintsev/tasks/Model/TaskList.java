@@ -1,9 +1,7 @@
-package ua.sumdu.j2se.Birintsev.tasks;
+package ua.sumdu.j2se.Birintsev.tasks.Model;
 
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 
 public abstract class TaskList implements Cloneable, Serializable, Iterable<Task>{
