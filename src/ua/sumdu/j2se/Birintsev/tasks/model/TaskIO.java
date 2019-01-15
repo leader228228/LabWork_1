@@ -1,5 +1,6 @@
-package ua.sumdu.j2se.Birintsev.tasks.Model;
+package ua.sumdu.j2se.Birintsev.tasks.model;
 
+import ua.sumdu.j2se.Birintsev.tasks.model.taskcollections.TaskList;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -7,12 +8,13 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
-
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
 
+/**
+ *  The class that operates with the binary and text input/output of the TaskList
+ *  and List&lt;Task&gt;
+ * */
 public class TaskIO {
-
-
 
     public static void write(TaskList tasks, OutputStream out) throws IOException {
         DataOutputStream dataOutputStream = null;
@@ -48,7 +50,7 @@ public class TaskIO {
             for (int i = 0; i < amOfTasks; i++) {
                 int detailsLength = dataInputStream.readInt();
                 StringBuilder taskDetails = new StringBuilder();
-                for (int j = 0; j < detailsLength; i++) {
+                for (int j = 0; j < detailsLength; j++) {
                     taskDetails.append(dataInputStream.readChar());
                 }
                 boolean isActive = dataInputStream.readBoolean();
@@ -98,7 +100,7 @@ public class TaskIO {
         }
     }
 
-    public static void write(TaskList tasks, Writer out) throws IOException{
+    public static void write(TaskList tasks, Writer out){
         PrintWriter printWriter = null;
         try {
             printWriter = new PrintWriter(out);
@@ -153,8 +155,6 @@ public class TaskIO {
         }
     }
 
-
-
     public static void writeText(TaskList tasks, File file) throws IOException{
         BufferedWriter bufferedWriter = null;
         try {
@@ -171,6 +171,7 @@ public class TaskIO {
             bufferedReader = new BufferedReader(new FileReader(file));
             read(tasks, bufferedReader);
         } catch (ParseException e) {
+            e.printStackTrace();
             throw new IOException(e);
         }finally {
             if(bufferedReader != null){
@@ -214,7 +215,7 @@ public class TaskIO {
             for (int i = 0; i < amOfTasks; i++) {
                 int detailsLength = dataInputStream.readInt();
                 StringBuilder taskDetails = new StringBuilder();
-                for (int j = 0; j < detailsLength; i++) {
+                for (int j = 0; j < detailsLength; j++) {
                     taskDetails.append(dataInputStream.readChar());
                 }
                 boolean isActive = dataInputStream.readBoolean();
@@ -264,7 +265,7 @@ public class TaskIO {
         }
     }
 
-    public static void write(List <Task> tasks, Writer out) throws IOException{
+    public static void write(List <Task> tasks, Writer out) {
         Iterator<Task> iter = tasks.iterator();
         StringBuilder taskListInfo = new StringBuilder();
         while (iter.hasNext()) {
@@ -331,7 +332,6 @@ public class TaskIO {
     }
 
     public static void writeText(List <Task> tasks, File file) throws IOException{
-        System.out.println("wrinitg starts");
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(file));
@@ -339,7 +339,6 @@ public class TaskIO {
         } finally {
             bufferedWriter.close();
         }
-        System.out.println("Writing ends");
     }
 
     public static void readText(List <Task> tasks, File file) throws IOException{
@@ -348,6 +347,7 @@ public class TaskIO {
             bufferedReader = new BufferedReader(new FileReader(file));
             read(tasks, bufferedReader);
         } catch (ParseException e) {
+            e.printStackTrace();
             throw new IOException(e);
         }finally {
             if(bufferedReader != null){

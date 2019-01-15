@@ -1,23 +1,19 @@
-package ua.sumdu.j2se.Birintsev.tasks.Model;
+package ua.sumdu.j2se.Birintsev.tasks.model;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import ua.sumdu.j2se.Birintsev.tasks.Utill;
-
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.dateCellFormater;
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.dateFormate;
 
-
 public class Task implements Cloneable, Serializable {
 
-    boolean wasNotified;
     private String details;
     private boolean isActive;
     private boolean isRepeated;
@@ -27,7 +23,9 @@ public class Task implements Cloneable, Serializable {
     private Date end;
 
     /**
-     * Property variables to show task info in the TableView
+     * Property variables to show task info in the TableView in the text form
+     * Each method that gets their properties refreshes them before according
+     * to the corresponding parameter of the task
      */
     private StringProperty observableDetails;
     private StringProperty observableTime;
@@ -51,7 +49,6 @@ public class Task implements Cloneable, Serializable {
     public LocalDateTime getEndLocalDateTime(){
         return Utill.dateToLocalDateTime(end);
     }
-
 
     public String getObservableDetails() {
         observableDetails.set(details);
@@ -169,13 +166,18 @@ public class Task implements Cloneable, Serializable {
         this.observableIsActive.set(observableIsActive);
     }
 
+    /**
+     * Creates a non-repetitive task
+     * @param title must not be empty or null
+     * @param time must not be null
+     * */
     public Task(String title, Date time) {
-        if (title == null || title.equals("") || title.equals("\uFEFF")) {
+        if (title == null || "".equals(title) || title.equals("\uFEFF")) {
+            System.err.println(new StringBuilder(getClass().getName()).append("The details of a task must be set"));
             throw new IllegalArgumentException("The details of task must be set");
         }
         details = title;
         this.time = this.start = this.end = time;
-
         observableDetails = new SimpleStringProperty();
         observableDetails.set(details);
         observableTime = new SimpleStringProperty();
@@ -190,18 +192,26 @@ public class Task implements Cloneable, Serializable {
         getObservableEnd();
         getObservableInterval();
         getObservableIsActive();
-        /*-----------------------------------------*/
-
     }
 
+    /**
+     * Creates a repetitive task
+     * @param title must not be empty or null
+     * @param start must not be null
+     * @param end must not be null
+     * @param interval must be a positive integer
+     * */
     public Task(String title, Date start, Date end, int interval) {
-        if (title == null || title.equals("") || title.equals("\uFEFF")) {
+        if (title == null || "".equals(title) || title.equals("\uFEFF")) {
+            System.err.println(new StringBuilder(getClass().getName()).append("The details of a task must be set"));
             throw new IllegalArgumentException("The details of task must be set");
         }
         if (start.after(end)) {
+            System.err.println(new StringBuilder(getClass().getName()).append("Start time can not be less than end time"));
             throw new IllegalArgumentException("Start time can not be less than end time");
         }
         if (interval <= 0) {
+            System.err.println(new StringBuilder(getClass().getName()).append("Interval time must be greater than 0"));
             throw new IllegalArgumentException("Interval time must be greater than 0");
         }
         isRepeated = true;
@@ -210,7 +220,6 @@ public class Task implements Cloneable, Serializable {
         this.start = start;
         this.end = end;
         this.interval = interval;
-
         observableDetails = new SimpleStringProperty();
         observableTime = new SimpleStringProperty();
         observableStart = new SimpleStringProperty();
@@ -224,7 +233,6 @@ public class Task implements Cloneable, Serializable {
         getObservableEnd();
         getObservableInterval();
         getObservableIsActive();
-        /*-----------------------------------------*/
     }
 
     public String getTitle() {
@@ -235,8 +243,14 @@ public class Task implements Cloneable, Serializable {
         return observableTime;
     }
 
+    /**
+     * Changes the title of a task
+     * @param title must not be empty or null
+     * @throws IllegalArgumentException if title is null or empty
+     * */
     public void setTitle(String title) {
-        if (title == null) {
+        if (title == null || "".equals(title)) {
+            System.err.println(new StringBuilder(getClass().getName()).append("The details of task must be set"));
             throw new IllegalArgumentException("The details of task must be set");
         }
         details = title;
@@ -252,6 +266,10 @@ public class Task implements Cloneable, Serializable {
         getObservableIsActive();
     }
 
+    /**
+     * @return the start time if a task is repititive
+     *          either time if it is not
+     * */
     public Date getTime() {
         if (isRepeated) {
             return start;
@@ -260,7 +278,16 @@ public class Task implements Cloneable, Serializable {
         }
     }
 
+    /**
+     * @param time must not be null
+     * @throws IllegalArgumentException if parameter time is null
+     * Sets the time of the task. Turns it kind to non-repetitive if it was a repetitive one.
+     * */
     public void setTime(Date time) {
+        if(time == null){
+            System.err.println(new StringBuilder(getClass().getName()).append("Parameter time must not be null"));
+            throw new IllegalArgumentException("Parameter time must not be null");
+        }
         isRepeated = false;
         this.time = this.start = this.end = time;
         getObservableTime();
@@ -309,17 +336,29 @@ public class Task implements Cloneable, Serializable {
         this.interval = interval;
     }
 
+    /**
+     * @param start must not be null
+     * @param end must not be null
+     * @param interval must be a positive integer
+     * @throws IllegalArgumentException if start/end is null or start is later than end or interval is less than or
+     *         equal to zero.
+     * Sets the time of the task. Turns it kind to repetitive if it was a non-repetitive one.
+     * */
     public void setTime(Date start, Date end, int interval) {
         if(start == null){
+            System.err.println(new StringBuilder(getClass().getName()).append("Parameter start must not be null"));
             throw new IllegalArgumentException("Parameter start must not be null");
         }
         if(end == null){
+            System.err.println(new StringBuilder(getClass().getName()).append("Parameter end must not be null"));
             throw new IllegalArgumentException("Parameter end must not be null");
         }
         if (start.after(end)) {
+            System.err.println(new StringBuilder(getClass().getName()).append("End time must be later than end time"));
             throw new IllegalArgumentException("End time must be later than end time");
         }
         if (interval <= 0) {
+            System.err.println(new StringBuilder(getClass().getName()).append("Interval time must be greater than 0"));
             throw new IllegalArgumentException("Interval time must be greater than 0");
         }
         isRepeated = true;
@@ -336,6 +375,10 @@ public class Task implements Cloneable, Serializable {
         return isRepeated;
     }
 
+    /**
+     * @return the Date of the following happening of the Task. null if the currentDate is later than the endTime/time
+     * (repetative task/ unrepetetive task) or if the task is inactive
+     * */
     public Date nextTimeAfter(Date current) {
         if (isActive) {
             if (isRepeated) {
@@ -357,6 +400,11 @@ public class Task implements Cloneable, Serializable {
         return null;        
     }
 
+    /**
+     * Fits the demands of the text output of a TaskList and a Task to a text file
+     * @see ua.sumdu.j2se.Birintsev.tasks.model.TaskIO
+     * @see ua.sumdu.j2se.Birintsev.tasks.model.taskcollections.TaskList
+     * */
     @Override
     public String toString() {
         StringBuilder taskInfo = new StringBuilder("\"");
@@ -364,7 +412,6 @@ public class Task implements Cloneable, Serializable {
         SimpleDateFormat dateFormat = new SimpleDateFormat(new StringBuilder("[").append(dateFormate).append("]").toString());
         if(isRepeated){
             taskInfo.append(" from ").append(dateFormat.format(start)).append(" to ").append(dateFormat.format(end)).append(" every [");
-            //int interval = this.interval; // in seconds
             int days = interval / 86400;
             int hours = (interval - days * 86400) / 3600;
             int minutes = (interval - days * 86400 - hours * 3600) / 60;
@@ -392,37 +439,6 @@ public class Task implements Cloneable, Serializable {
         return taskInfo.toString();
     }
 
-    /*StringBuilder taskInfo = new StringBuilder("\"");
-            taskInfo.append(task.getTitle().replace("\"","\"\"")).append('"');
-            SimpleDateFormat dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.S]");
-            if(task.isRepeated()){
-                taskInfo.append(" from ").append(dateFormat.format(task.getStartTime())).append(" to ").append(dateFormat.format(task.getEndTime())).append(" every [");
-                int interval = task.getRepeatInterval(); // in seconds
-                int days = interval / 86400;
-                int hours = (interval - days * 86400) / 3600;
-                int minutes = (interval - days * 86400 - hours * 3600) / 60;
-                int seconds = interval - days * 86400 - hours * 3600 - minutes * 60;
-                StringBuilder intervalFormat = new StringBuilder();
-                if(days != 0){
-                    intervalFormat.append(days).append((days > 1 ? " days " : " day "));
-                }
-                if(hours != 0){
-                    intervalFormat.append(hours).append((hours > 1 ? " hours" : " hour "));
-                }
-                if(minutes != 0){
-                    intervalFormat.append(minutes).append((minutes > 1 ? " minutes " : " minute "));
-                }
-                if(seconds != 0){
-                    intervalFormat.append(seconds).append((seconds > 1 ? " seconds " : " second "));
-                }
-                taskInfo.append(intervalFormat.substring(0,intervalFormat.length()-1)).append(']');
-            }else{
-                taskInfo.append(" at ").append(dateFormat.format(task.getTime()));
-            }
-            if(!task.isActive()){
-                taskInfo.append(" inactive");
-            }*/
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -434,9 +450,9 @@ public class Task implements Cloneable, Serializable {
         Task task = (Task) o;
         if(details.equals(task.details) && isActive == task.isActive && isRepeated == task.isRepeated){
             if(isRepeated){
-                if(start.compareTo(task.start) == 0 && end.compareTo(task.end) == 0 && interval == task.interval) return true;
+                return start.compareTo(task.start) == 0 && end.compareTo(task.end) == 0 && interval == task.interval;
             }else{
-                if(time.compareTo(task.time) == 0) return true;
+                return time.compareTo(task.time) == 0;
             }
         }
         return false;
@@ -451,19 +467,12 @@ public class Task implements Cloneable, Serializable {
     }
 
     @Override
-    public Task clone() throws CloneNotSupportedException { // clone переписать ???
+    public Task clone() throws CloneNotSupportedException {
         Task temp = (Task) super.clone();
         temp.time = (Date) time.clone();
-        temp.start = (Date) start.clone();//!!!!!!!!!!!!!!
+        temp.start = (Date) start.clone();
         temp.end = (Date) end.clone();
         return temp;
     }
 
-    public String getDetails() {
-        return details;
-    }
-
-    public Date getStart() {
-        return start;
-    }
 }

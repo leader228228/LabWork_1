@@ -2,6 +2,7 @@
 
 <?import com.jfoenix.controls.JFXCheckBox?>
 <?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXSpinner?>
 <?import com.jfoenix.controls.JFXTimePicker?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
@@ -14,7 +15,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<Accordion maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ua.sumdu.j2se.Birintsev.tasks.Contorllers.View">
+<Accordion maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="850.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ua.sumdu.j2se.Birintsev.tasks.view.controllers.View">
   <panes>
     <TitledPane fx:id="allTasksTitledPane" animated="false" text="All tasks">
       <content>
@@ -22,12 +23,12 @@
                <children>
                   <TableView fx:id="tableAll" layoutX="46.0" layoutY="53.0" prefHeight="200.0" prefWidth="464.0" style="-fx-background-color: #EEECF7;" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="50.0">
                     <columns>
-                      <TableColumn fx:id="taskDetailClmn_all" maxWidth="150.0" minWidth="20.0" prefWidth="100.0" text="Task" />
+                      <TableColumn fx:id="taskDetailClmn_all" maxWidth="300.0" minWidth="20.0" prefWidth="100.0" text="Task" />
                       <TableColumn fx:id="timeClmn_all" maxWidth="150.0" minWidth="20.0" prefWidth="100.0" text="Time" />
                         <TableColumn fx:id="fromClmn_all" maxWidth="150.0" minWidth="20.0" prefWidth="100.0" text="From" />
                         <TableColumn fx:id="toClmn_all" maxWidth="150.0" minWidth="20.0" prefWidth="100.0" text="To" />
-                        <TableColumn fx:id="intervalClmn_all" maxWidth="150.0" minWidth="20.0" prefWidth="100.0" text="Interval" />
-                        <TableColumn fx:id="isActiveClmn_all" maxWidth="150.0" minWidth="20.0" prefWidth="100.0" text="Active" />
+                        <TableColumn fx:id="intervalClmn_all" maxWidth="200.0" minWidth="20.0" prefWidth="100.0" text="Interval" />
+                        <TableColumn fx:id="isActiveClmn_all" maxWidth="220.0" minWidth="20.0" prefWidth="112.0" resizable="false" text="Active" />
                     </columns>
                   </TableView>
                </children></AnchorPane>
@@ -54,66 +55,68 @@
                </children></AnchorPane>
       </content>
     </TitledPane>
-    <TitledPane fx:id="newTaskTitledPane" animated="false" style="-fx-font: Montserrat;" text="New task" textAlignment="CENTER" textFill="#4e6640">
+    <TitledPane fx:id="newTaskTitledPane" animated="false" text="New task" textAlignment="CENTER" textFill="#4e6640">
       <content>
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" style="-fx-background-color: #EEECF7;">
                <children>
-                  <Text fx:id="fromLabel" layoutX="45.0" layoutY="100.0" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-font: Montserrat;" text="From" wrappingWidth="66.99847412109375" AnchorPane.leftAnchor="50.0">
+                  <Text fx:id="fromLabel" layoutX="62.0" layoutY="106.0" strokeType="OUTSIDE" strokeWidth="0.0" text="From" wrappingWidth="66.99847412109375" AnchorPane.leftAnchor="62.0">
                      <font>
                         <Font name="Arial" size="24.0" />
                      </font></Text>
-                  <TextField fx:id="taskDetails" layoutX="291.0" layoutY="25.0" prefHeight="35.0" prefWidth="216.0" promptText="Type your task here" style="-fx-font: Montserrat; -fx-background-color: #EEECF7;" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="5.0">
+                  <TextField fx:id="taskDetails" layoutX="291.0" layoutY="25.0" prefHeight="35.0" prefWidth="216.0" promptText="Type your task here" style="-fx-background-color: #EEECF7; -fx-alignment: center;" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="5.0">
                      <font>
-                        <Font name="Lucida Fax Regular" size="18.0" />
+                        <Font name="Arial" size="18.0" />
                      </font></TextField>
-                  <Button fx:id="addTaskBtn" layoutX="348.0" layoutY="246.0" mnemonicParsing="false" onAction="#createNewTask" style="-fx-background-color: #1B42CB; -fx-background-radius: 20;" text="Add task" textFill="#eeecf7" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="348.0">
+                  <Button fx:id="addTaskBtn" layoutX="373.0" layoutY="327.0" mnemonicParsing="false" onAction="#createNewTask" style="-fx-background-color: #1ca80a; -fx-background-radius: 20;" text="Add task" textFill="#eeecf7" AnchorPane.bottomAnchor="44.0" AnchorPane.leftAnchor="373.0">
                      <font>
                         <Font name="Lucida Bright" size="18.0" />
                      </font></Button>
-                  <JFXDatePicker fx:id="startDate" defaultColor="#1b42cb" layoutX="163.0" layoutY="68.0" />
-                  <JFXTimePicker fx:id="startTime" defaultColor="#1b42cb" layoutX="163.0" layoutY="103.0" />
-                  <JFXDatePicker fx:id="endDate" defaultColor="#1b42cb" layoutX="531.0" layoutY="68.0" />
-                  <JFXTimePicker fx:id="endTime" defaultColor="#1b42cb" layoutX="531.0" layoutY="103.0" />
-                  <Text fx:id="toLabel" layoutX="479.0" layoutY="100.0" strokeType="OUTSIDE" strokeWidth="0.0" text="To" wrappingWidth="36.99847412109375">
+                  <JFXDatePicker fx:id="startDate" defaultColor="#1b42cb" layoutX="163.0" layoutY="82.0" />
+                  <JFXTimePicker fx:id="startTime" defaultColor="#1b42cb" layoutX="163.0" layoutY="117.0" />
+                  <JFXDatePicker fx:id="endDate" defaultColor="#1b42cb" layoutX="581.0" layoutY="74.0" AnchorPane.rightAnchor="50.0" />
+                  <JFXTimePicker fx:id="endTime" defaultColor="#1b42cb" layoutX="581.0" layoutY="109.0" AnchorPane.rightAnchor="50.0" />
+                  <Text fx:id="toLabel" layoutX="529.0" layoutY="106.0" strokeType="OUTSIDE" strokeWidth="0.0" text="To" wrappingWidth="36.99847412109375">
                      <font>
-                        <Font name="Lucida Bright" size="24.0" />
+                        <Font name="Arial" size="24.0" />
                      </font></Text>
-                  <JFXCheckBox fx:id="isActive" checkedColor="#30f209" layoutX="160.0" layoutY="201.0" selected="true" text="Activate" unCheckedColor="#ff2d2d">
+                  <JFXCheckBox fx:id="isActive" checkedColor="#30f209" layoutX="160.0" layoutY="222.0" selected="true" text="Activate" unCheckedColor="#ff2d2d">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font></JFXCheckBox>
-                  <JFXCheckBox fx:id="isRepetative" checkedColor="#30f209" layoutX="160.0" layoutY="166.0" onAction="#changeCreationMode" selected="true" text="Repetative task" unCheckedColor="#ff2d2d">
+                  <JFXCheckBox fx:id="isRepetative" checkedColor="#30f209" layoutX="160.0" layoutY="182.0" onAction="#changeCreationMode" selected="true" text="Repetative task" unCheckedColor="#ff2d2d">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font></JFXCheckBox>
-                  <Text fx:id="everyLabel" layoutX="531.0" layoutY="174.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Every" wrappingWidth="50.99847412109375">
+                  <Text fx:id="everyLabel" layoutX="571.9954223632812" layoutY="180.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Every" wrappingWidth="50.99847412109375" AnchorPane.rightAnchor="225.006103515625">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font></Text>
-                  <TextField fx:id="daysTxt" layoutX="596.0" layoutY="149.0" onContextMenuRequested="#blockContextMenu" prefWidth="40.0" style="-fx-background-radius: 10; -fx-background-color: #EEECF7;" text="0">
+                  <TextField fx:id="daysTxt" layoutX="646.0" layoutY="155.0" onContextMenuRequested="#blockContextMenu" prefHeight="37.0" prefWidth="90.0" style="-fx-background-radius: 10; -fx-background-color: #EEECF7; -fx-alignment: center;" text="0" AnchorPane.rightAnchor="120.0">
                      <font>
                         <Font name="Arial" size="20.0" />
                      </font></TextField>
-                  <TextField fx:id="minutesTxt" layoutX="596.0" layoutY="229.0" onContextMenuRequested="#blockContextMenu" prefWidth="40.0" style="-fx-background-radius: 10; -fx-background-color: #EEECF7;" text="5">
+                  <TextField fx:id="minutesTxt" layoutX="646.0" layoutY="235.0" onContextMenuRequested="#blockContextMenu" prefWidth="90.0" style="-fx-background-radius: 10; -fx-background-color: #EEECF7; -fx-alignment: center;" text="5" AnchorPane.rightAnchor="120.0">
                      <font>
                         <Font name="Arial" size="20.0" />
                      </font></TextField>
-                  <TextField fx:id="hoursTxt" layoutX="596.0" layoutY="189.0" onContextMenuRequested="#blockContextMenu" prefWidth="40.0" style="-fx-background-radius: 10; -fx-background-color: #EEECF7;" text="0">
+                  <TextField fx:id="hoursTxt" layoutX="646.0" layoutY="195.0" onContextMenuRequested="#blockContextMenu" prefHeight="37.0" prefWidth="90.0" style="-fx-background-radius: 10; -fx-background-color: #EEECF7; -fx-alignment: center;" text="0" AnchorPane.rightAnchor="120.0">
                      <font>
                         <Font name="Arial" size="20.0" />
                      </font></TextField>
-                  <Text fx:id="daysLabel" layoutX="651.0" layoutY="174.0" strokeType="OUTSIDE" strokeWidth="0.0" text="days" wrappingWidth="49.99847412109375">
-                     <font>
-                        <Font name="Arial" size="18.0" />
-                     </font></Text>
-                  <Label fx:id="hoursLabel" layoutX="651.0" layoutY="194.0" prefHeight="23.0" prefWidth="66.0" text="hours">
+                  <Label fx:id="hoursLabel" layoutX="701.0" layoutY="200.0" prefHeight="23.0" prefWidth="47.0" text="hours" AnchorPane.rightAnchor="50.0">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font></Label>
-                  <Label fx:id="minutesLabel" layoutX="651.0" layoutY="234.0" prefHeight="23.0" prefWidth="78.0" text="minutes">
+                  <Label fx:id="minutesLabel" layoutX="701.0" layoutY="240.0" prefHeight="23.0" prefWidth="64.0" text="minutes" AnchorPane.rightAnchor="50.0">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font></Label>
+                  <Label fx:id="daysLabel" layoutX="734.0" layoutY="164.0" prefHeight="23.0" prefWidth="40.0" text="days" AnchorPane.rightAnchor="50.0">
+                     <font>
+                        <Font name="Arial" size="18.0" />
+                     </font>
+                  </Label>
+                  <JFXSpinner fx:id="spinner" layoutX="412.0" layoutY="308.0" />
                </children></AnchorPane>
       </content>
     </TitledPane>

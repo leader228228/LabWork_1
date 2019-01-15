@@ -1,7 +1,8 @@
-package ua.sumdu.j2se.Birintsev.tasks.Contorllers;
+package ua.sumdu.j2se.Birintsev.tasks.view.controllers;
 
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXSpinner;
 import com.jfoenix.controls.JFXTimePicker;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -23,29 +24,28 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
-
-import ua.sumdu.j2se.Birintsev.tasks.Model.Task;
-import ua.sumdu.j2se.Birintsev.tasks.Model.TaskIO;
-import ua.sumdu.j2se.Birintsev.tasks.Model.Tasks;
+import ua.sumdu.j2se.Birintsev.tasks.model.Task;
+import ua.sumdu.j2se.Birintsev.tasks.model.TaskIO;
+import ua.sumdu.j2se.Birintsev.tasks.model.Tasks;
 import ua.sumdu.j2se.Birintsev.tasks.Utill;
-
 import static java.lang.Thread.currentThread;
 import static ua.sumdu.j2se.Birintsev.tasks.Utill.*;
 
+/**
+ * The class that represents the main controller of the application
+ * @see RemoveTaskScene
+ * @see EditTaskScene
+ * */
 public class View extends Application {
-
-    //final static Logger logger = Logger.getLogger(View.class.getName());
 
     public View() {
         mainController = this;
@@ -89,9 +89,6 @@ public class View extends Application {
     private JFXDatePicker endDate;
 
     @FXML
-    private Text testLabel3;
-
-    @FXML
     private JFXTimePicker startTime;
 
     @FXML
@@ -122,7 +119,7 @@ public class View extends Application {
     private TextField hoursTxt;
 
     @FXML
-    private Text daysLabel;
+    private Label daysLabel;
 
     @FXML
     private Label hoursLabel;
@@ -184,13 +181,16 @@ public class View extends Application {
     @FXML
     private JFXTimePicker sublistToTime;
 
+    @FXML
+    private JFXSpinner spinner;
+
     /**
      * Turns the newTaskTitledPane
      * to mode of creation a repetative or non-repetative task
      */
     @FXML
-    private void changeCreationMode(){
-        if(isRepetative.isSelected()){
+    private void changeCreationMode() {
+        if(isRepetative.isSelected()) {
             fromLabel.setText("From");
             showNodes(toLabel,endDate,endTime,everyLabel,daysLabel,daysTxt,hoursLabel,hoursTxt,minutesLabel,minutesTxt);
         } else {
@@ -200,102 +200,112 @@ public class View extends Application {
     }
 
     @FXML
-    public void createNewTask(){
+    public void createNewTask() {
         Task task;
         String details = taskDetails.getText();
-        if(details == null){
+        if(details == null) {
             taskDetails.setPromptText("Please, enter the task");
             return;
         }
-        if(details == "" || details == null){
-            return; // logger + notification
+        if("".equals(details) || details == null) {
+            System.err.println(new StringBuilder("Try to add an empty task ").append(getClass()));
+            return;
         }
         Date start =  java.sql.Date.valueOf(startDate.getValue());
         start.setTime(start.getTime() + startTime.getValue().getHour() * 3600000 + startTime.getValue().getMinute() * 60000);
-        if(isRepetative.isSelected()){
+        if(isRepetative.isSelected()) {
             Date end =  java.sql.Date.valueOf(endDate.getValue());
             end.setTime(end.getTime() + endTime.getValue().getHour() * 3600000 + endTime.getValue().getMinute() * 60000);
-            //int interval = Integer.parseInt(daysTxt.getText()) * 86400 + Integer.parseInt(hoursTxt.getText()) * 3600 + Integer.parseInt(minutesTxt.getText()) * 60;
             task = new Task(details, start, end,
                     Utill.getIntervalFromStrings(daysTxt.getText(), hoursTxt.getText(), minutesTxt.getText()));
-        }else{
+        }else {
             task = new Task(details, start);
         }
         task.setActive(isActive.isSelected());
-        observableList.add(task);
-        refreshSublist();
+        SystemTray tray = SystemTray.getSystemTray();
+        Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+        TrayIcon trayIcon = new TrayIcon(image, "Tray Demo");
+        trayIcon.setImageAutoSize(true);
+        try {
+            tray.add(trayIcon);
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+        if(observableList.add(task)){
+            refreshAddForm();
+            trayIcon.displayMessage(task.getTitle(), new StringBuilder("The task: ").append(task.getTitle()).append(" has been successfully added").toString(), TrayIcon.MessageType.INFO);
+            refreshSublist();
+        }
     }
+
     /**
      * Was written to block the context menu for an element
      */
     @FXML
     public void blockContextMenu(){
-
+        //blocks the context menu request on the days/hours/minutes text fields
     }
 
     void refreshSublist() {
+        System.out.println(new StringBuilder(getClass().getName()).append(" refreshing the sublist starts"));
         Date from = Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue()));
         Date to = Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue()));
         Iterable <Task> nonObservableSublist = Tasks.incoming( observableList, from, to);
         tableWeek.setItems(FXCollections.observableList((List<Task>)nonObservableSublist));
+        System.out.println(new StringBuilder(getClass().getName()).append(" refreshing the sublist finished. New sublist: ").append(tableWeek.getItems()));
     }
 
     public static void main(String[] args) {
+        System.out.println(new StringBuilder(View.class.getName()).append(": Application is launching"));
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        System.out.println();
-        Parent root = FXMLLoader.load(new URL("res/fxml/sample.fxml"));
-        //Parent root = FXMLLoader.load(getClass().getResource("../../../../../../../res/fxml/sample.fxml"));
+        System.out.println(new StringBuilder(getClass().getName()).append(": Application starts"));
+        Parent root = FXMLLoader.load(getClass().getResource("fxml/sample.fxml"));
+        System.out.println(new StringBuilder(getClass().getName()).append(": Application starts"));
         primaryStage.setTitle("Task manager");
         primaryStage.setScene(new Scene(root, primaryStage.getWidth(), primaryStage.getHeight()));
         primStage = primaryStage;
-        //AquaFx.style();
-        primaryStage.getScene().getStylesheets().add(View.class.getResource("theme.css").toExternalForm());
         primaryStage.setResizable(false);
+        System.out.println(new StringBuilder(getClass().getName()).append(": stage created"));
         primaryStage.show();
     }
 
     private void notificatorLaunch(){
-        //Obtain only one instance of the SystemTray object
+        System.out.println(new StringBuilder(getClass().getName()).append(": launching the notificator starts"));
         SystemTray tray = SystemTray.getSystemTray();
-        //If the icon is a file
         Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
-        //Alternative (if the icon is on the classpath):
-        //Image image = Toolkit.getToolkit().createImage(getClass().getResource("icon.png"));
         TrayIcon trayIcon = new TrayIcon(image, "Tray Demo");
-        //Let the system resize the image if needed
         trayIcon.setImageAutoSize(true);
-        //Set tooltip text for the tray icon
         trayIcon.setToolTip("System tray icon demo");
         try {
             tray.add(trayIcon);
         } catch (AWTException e) {
-            e.printStackTrace(); // logger
+            e.printStackTrace();
         }
         Notificator notificator = new Notificator(observableList, trayIcon);
         notificator.setDaemon(true);
         notificator.start();
+        System.out.println(new StringBuilder(getClass().getName()).append(": launching the notificator finished"));
     }
 
     @FXML
     private void initialize() throws IOException {
+        System.out.println(new StringBuilder(getClass().getName()).append(": initialization starts"));
+        refreshAddForm();
+        sublistFromDate.setValue(LocalDate.now());
+        sublistFromTime.setValue(LocalTime.now());
+        sublistToDate.setValue(LocalDate.now().plusDays(7));
+        sublistToTime.setValue(LocalTime.now());
         System.out.println(currentThread());
         tasksFile = new File(new StringBuilder(tasklistsDir).append(savedTasksFileName).toString());
         if(!tasksFile.canRead()){
             tasksFile.createNewFile();
         }
         observableList = loadTaskList();
-        /*
-        * Starting the notificator
-        * */
         notificatorLaunch();
-        startDate.setValue(LocalDate.now());
-        startTime.setValue(LocalTime.now());
-        endDate.setValue(LocalDate.now().plusDays(7));
-        endTime.setValue(LocalTime.now());
         taskDetails.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -336,7 +346,7 @@ public class View extends Application {
         endDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
             public void changed(ObservableValue<? extends LocalDate> observable, LocalDate oldValue, LocalDate newValue) {
-                if(newValue == null){
+                if(newValue == null) {
                     endDate.setValue(oldValue);
                 }
                 LocalDateTime newLDT = LocalDateTime.of(newValue, endTime.getValue());
@@ -359,10 +369,6 @@ public class View extends Application {
                 }
             }
         });
-        sublistFromDate.setValue(LocalDate.now());
-        sublistFromTime.setValue(LocalTime.now());
-        sublistToDate.setValue(LocalDate.now().plusDays(7));
-        sublistToTime.setValue(LocalTime.now());
         sublist = FXCollections.observableArrayList();
         sublistFromDate.valueProperty().addListener(new ChangeListener<LocalDate>() {
             @Override
@@ -373,7 +379,7 @@ public class View extends Application {
                 }
                 LocalDateTime newLDT = LocalDateTime.of(newValue, sublistFromTime.getValue());
                 LocalDateTime toLDT = LocalDateTime.of(sublistToDate.getValue(), sublistToTime.getValue());
-                if(!newLDT.isBefore(toLDT)){
+                if(!newLDT.isBefore(toLDT)) {
                     sublistFromDate.setValue(oldValue);
                     return;
                 }
@@ -405,7 +411,7 @@ public class View extends Application {
                 }
                 LocalDateTime newLDT = LocalDateTime.of(newValue, sublistToTime.getValue());
                 LocalDateTime fromLDT = LocalDateTime.of(sublistFromDate.getValue(), sublistFromTime.getValue());
-                if(!newLDT.isAfter(fromLDT)){
+                if(!newLDT.isAfter(fromLDT)) {
                     sublistToDate.setValue(oldValue);
                     return;
                 }
@@ -421,7 +427,7 @@ public class View extends Application {
                 }
                 LocalDateTime newLDT = LocalDateTime.of(sublistToDate.getValue(),newValue);
                 LocalDateTime fromLDT = LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue());
-                if(!newLDT.isAfter(fromLDT)){
+                if(!newLDT.isAfter(fromLDT)) {
                     sublistToTime.setValue(oldValue);
                     return;
                 }
@@ -435,7 +441,7 @@ public class View extends Application {
                 if(!matcher.matches()){
                     daysTxt.setText(oldValue);
                 }
-                if(Integer.parseInt(daysTxt.getText()) > 24854){
+                if(Integer.parseInt(daysTxt.getText()) > 24854) {
                     daysTxt.setText(oldValue);
                 }
             }
@@ -464,18 +470,15 @@ public class View extends Application {
                 }
             }
         });
-        /*
-        * List initializing
-        * */
         observableList.addListener(new ListChangeListener<Task>() {
             @Override
             public void onChanged(Change<? extends Task> c) {
                 c.next();
                 if(c.wasAdded()){
                     List <Task> addedSubList = (List <Task>)c.getAddedSubList();
-                    for(Task task : addedSubList){
+                    for(Task task : addedSubList) {
                         Date date = task.nextTimeAfter(Utill.localDateTimeToDate(LocalDateTime.of(sublistFromDate.getValue(),sublistFromTime.getValue())));
-                        if(date == null){
+                        if(date == null) {
                             return;
                         }
                         if(!date.after(Utill.localDateTimeToDate(LocalDateTime.of(sublistToDate.getValue(),sublistToTime.getValue())))){
@@ -483,16 +486,13 @@ public class View extends Application {
                         }
                     }
                 }
-                if(c.wasRemoved()){
+                if(c.wasRemoved()) {
                     List <Task> removedSublist = (List<Task>)c.getRemoved();
                     sublist.removeAll(removedSublist);
                 }
                 saveTasks();
             }
         });
-        /*
-        * "All-task" table building
-        * */
         taskDetailClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableDetails"));
         timeClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableTime"));
         fromClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableStart"));
@@ -500,9 +500,6 @@ public class View extends Application {
         intervalClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
         isActiveClmn_all.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
         tableAll.setItems(observableList);
-        /*
-         * "Week-task" table building
-         * */
         taskDetailClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableDetails"));
         timeClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableTime"));
         fromClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableStart"));
@@ -510,57 +507,47 @@ public class View extends Application {
         intervalClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableInterval"));
         isActiveClmn_sublist.setCellValueFactory(new PropertyValueFactory<>("observableIsActive"));
         tableWeek.setItems(sublist);
-        refreshSublist();
-
-        /*
-        * Saving
-        * */
         observableList.addListener(new ListChangeListener<Task>() {
             @Override
             public void onChanged(Change<? extends Task> c) {
                 saveTasks();
             }
         });
-        /*
-        * Editing task properties
-         */
         MenuItem editMenuItemAll = new MenuItem("Edit");
         MenuItem removeMenuItemAll = new MenuItem("Remove");
         removeMenuItemAll.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Task task = tableAll.getSelectionModel().getSelectedItem();
-                if(task == null){
+                if(task == null) {
                     return;
                 }
                 try {
                     Stage stage = getRemoveTaskStage(task, primStage, mainController);
                     stage.show();
-                }catch (IOException e){
-                    e.printStackTrace();// logger?
+                }catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
-
         editMenuItemAll.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Task task = tableAll.getSelectionModel().getSelectedItem();
-                if(task == null){
+                if(task == null) {
                     return;
                 }
                 try {
                     Stage stage = getEditTaskStage(task, primStage, mainController);
                     stage.show();
                 }catch (IOException e){
-                    e.printStackTrace();// logger?
+                    e.printStackTrace();
                 }
             }
         });
         ContextMenu editMenuAll = new ContextMenu(editMenuItemAll, removeMenuItemAll);
         editMenuAll.setAutoHide(true);
         tableAll.setContextMenu(editMenuAll);
-
         MenuItem editMenuItemWeek = new MenuItem("Edit");
         MenuItem removeMenuItemWeek = new MenuItem("Remove");
         removeMenuItemWeek.setOnAction(new EventHandler<ActionEvent>() {
@@ -574,7 +561,7 @@ public class View extends Application {
                     Stage stage = getRemoveTaskStage(task, primStage, mainController);
                     stage.show();
                 }catch (IOException e){
-                    e.printStackTrace();// logger?
+                    e.printStackTrace();
                 }
             }
         });
@@ -588,8 +575,8 @@ public class View extends Application {
                 try {
                     Stage stage = getEditTaskStage(task, primStage, mainController);
                     stage.show();
-                }catch (IOException e){
-                    e.printStackTrace();// logger?
+                }catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -598,32 +585,67 @@ public class View extends Application {
         tableWeek.setContextMenu(editMenuWeek);
     }
 
-    private ObservableList<Task> loadTaskList() throws IOException{
-        List <Task> list = new LinkedList<Task>();
+    /**
+     * Loads the tasks are stored in the file
+     * and adds them to the observableList
+     * @see TaskIO
+     * */
+    private ObservableList<Task> loadTaskList() throws IOException {
+        System.out.println(new StringBuilder(getClass().getName()).append(": loading the task list"));
+        List <Task> list = new LinkedList<>();
         observableList = FXCollections.observableArrayList(Collections.synchronizedList(list));
         TaskIO.readText(observableList,tasksFile);
+        System.out.println(new StringBuilder(getClass().getName()).append(": the list has benn loaded: ").append(observableList));
         return observableList;
     }
 
+    /**
+     * Rewrites the contents of the saving file with the contents of the observableList
+     * */
     public void saveTasks () {
+        System.out.println(new StringBuilder(getClass().getName()).append(": saving the tasks"));
         try {
             TaskIO.writeText(observableList,tasksFile);
-        }catch (IOException e){
+            System.out.println(new StringBuilder(getClass().getName()).append(": tasks have been successfully saved"));
+        }catch (IOException e) {
             System.out.println(e.getCause());
         }
     }
 
-    public Stage getPrimStage(){
+    /**
+     * Returns the stage was created in the method start()
+     * */
+    public Stage getPrimStage() {
         return primStage;
     }
 
-    public void removeTask(Task task){
-        observableList.removeAll(task);
-        sublist.removeAll(task);
+    public void removeTask(Task task) {
+        if(observableList.removeAll(task) && sublist.removeAll(task)) {
+            System.out.println(new StringBuilder(getClass().getName()).append(": ").append(task).append(" has been removed"));
+        }
     }
 
     @Override
     public void stop() throws Exception {
+        System.out.println(new StringBuilder(getClass().getName()).append(": application stops"));
         System.exit(1);
+    }
+
+    /**
+     * The method refreshes the form which operates with constructing and
+     * adding a task to the obsevableList
+     * */
+    private void refreshAddForm() {
+        addTaskBtn.setVisible(false);
+        spinner.setVisible(true);
+        taskDetails.setText("");
+        startDate.setValue(LocalDate.now());
+        startTime.setValue(LocalTime.now());
+        endDate.setValue(LocalDate.now().plusDays(7));
+        endTime.setValue(LocalTime.now());
+        daysTxt.setText("0");
+        hoursTxt.setText("0");
+        minutesTxt.setText("5");
+        spinner.setVisible(false);
     }
 }
